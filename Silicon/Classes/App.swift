@@ -59,7 +59,8 @@ import Cocoa
             return nil
         }
         
-        self.bundleID      = info.info[ "CFBundleIdentifier" ] as? String
+        self.bundleID      = info.info[ "CFBundleIdentifier" ]        as? String
+        self.version       = info.info[ "CFBundleShortVersionString" ] as? String
         self.name          = FileManager.default.displayName( atPath: path )
         self.path          = path
         self.icon          = NSWorkspace.shared.icon( forFile: path )
