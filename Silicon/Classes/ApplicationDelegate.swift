@@ -93,4 +93,9 @@ import GitHubUpdates
     {
         self.updater.checkForUpdates( sender )
     }
+
+    @IBAction public func openGitHub( _ sender: Any? )
+    {
+        NSWorkspace.shared.open( URL( string: "https://github.com/ByronScottJones/silicon" )! )
+    }
 }

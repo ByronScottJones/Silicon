@@ -694,13 +694,19 @@
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="Help" hidden="YES" id="wpr-3q-Mcd">
+                <menuItem title="Help" id="wpr-3q-Mcd">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
                         <items>
                             <menuItem title="Silicon Help" keyEquivalent="?" id="FKE-Sm-Kum">
                                 <connections>
                                     <action selector="showHelp:" target="-1" id="y7X-2Q-9no"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="hlp-sep-gh1"/>
+                            <menuItem title="GitHub Repository" id="hlp-gh-001">
+                                <connections>
+                                    <action selector="openGitHub:" target="-1" id="hlp-gh-act"/>
                                 </connections>
                             </menuItem>
                         </items>

@@ -148,7 +148,9 @@ public class MainWindowController: NSWindowController
         self.updateSort()
         self.addBrewColumns()
         self.tableView.delegate = self
-        
+        self.tableView.headerView = NSTableHeaderView()
+        self.addFeaturesLabel()
+
         self.window?.setContentBorderThickness( 0, for: .minY )
         
         self.dropView.onDrag = { _ in return true }
@@ -481,6 +483,35 @@ public class MainWindowController: NSWindowController
             .replacingOccurrences( of: "\"", with: "&quot;" )
     }
     
+    // MARK: - Welcome screen
+
+    private func addFeaturesLabel()
+    {
+        let features =
+            "• Identifies app architecture: Apple Silicon, Universal,\n" +
+            "  Intel 64/32, and PowerPC\n\n" +
+            "• Filter by architecture type — including Universal\n" +
+            "  and Non-ARM views\n\n" +
+            "• Homebrew version lookup — see if a newer version\n" +
+            "  is available via Homebrew\n\n" +
+            "• Export app list to CSV or HTML\n\n" +
+            "• Drag and drop any .app to inspect its architecture"
+
+        let label          = NSTextField( wrappingLabelWithString: features )
+        label.font         = NSFont.systemFont( ofSize: NSFont.smallSystemFontSize + 1 )
+        label.textColor    = .secondaryLabelColor
+        label.alignment    = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        self.dropView.addSubview( label )
+
+        NSLayoutConstraint.activate(
+        [
+            label.leadingAnchor.constraint( equalTo: self.dropView.leadingAnchor, constant: 40 ),
+            label.widthAnchor.constraint( equalToConstant: 280 ),
+            label.centerYAnchor.constraint( equalTo: self.dropView.centerYAnchor ),
+        ] )
+    }
+
     // MARK: - Homebrew
 
     private func addBrewColumns()
