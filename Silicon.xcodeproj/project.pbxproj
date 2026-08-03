@@ -17,6 +17,7 @@
 		0586D55D2566978100CBBD48 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D55C2566978100CBBD48 /* App.swift */; };
 		0586D560256697A500CBBD48 /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D55F256697A500CBBD48 /* MainWindowController.swift */; };
 		0586D5682566995800CBBD48 /* AboutWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D5672566995800CBBD48 /* AboutWindowController.swift */; };
+		FF01PREFS0000000000000002 /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF01PREFS0000000000000001 /* PreferencesWindowController.swift */; };
 		0586D56C2566996500CBBD48 /* AboutWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0586D56A2566996500CBBD48 /* AboutWindowController.xib */; };
 		0586D56E2566997000CBBD48 /* MainWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0586D5702566997000CBBD48 /* MainWindowController.xib */; };
 		0586D5732566A31200CBBD48 /* NumberToString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D5722566A31200CBBD48 /* NumberToString.swift */; };
@@ -71,6 +72,7 @@
 		0586D55C2566978100CBBD48 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		0586D55F256697A500CBBD48 /* MainWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowController.swift; sourceTree = "<group>"; };
 		0586D5672566995800CBBD48 /* AboutWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutWindowController.swift; sourceTree = "<group>"; };
+		FF01PREFS0000000000000001 /* PreferencesWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesWindowController.swift; sourceTree = "<group>"; };
 		0586D56B2566996500CBBD48 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/AboutWindowController.xib; sourceTree = "<group>"; };
 		0586D56F2566997000CBBD48 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainWindowController.xib; sourceTree = "<group>"; };
 		0586D5722566A31200CBBD48 /* NumberToString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberToString.swift; sourceTree = "<group>"; };
@@ -198,6 +200,7 @@
 				0586D5782566B31A00CBBD48 /* MachOFile.swift */,
 				0586D55F256697A500CBBD48 /* MainWindowController.swift */,
 				0586D5722566A31200CBBD48 /* NumberToString.swift */,
+				FF01PREFS0000000000000001 /* PreferencesWindowController.swift */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -469,6 +472,7 @@
 				05680C0B256F7FA1000520F2 /* IsNotZero.swift in Sources */,
 				0586D560256697A500CBBD48 /* MainWindowController.swift in Sources */,
 				05680C07256F7E0C000520F2 /* IsZero.swift in Sources */,
+				FF01PREFS0000000000000002 /* PreferencesWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
