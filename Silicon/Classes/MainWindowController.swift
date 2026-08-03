@@ -118,7 +118,7 @@ public class MainWindowController: NSWindowController
         }
     }
 
-    @objc public private( set ) dynamic var checkHomebrew = UserDefaults.standard.bool( forKey: "checkHomebrew" )
+    @objc public dynamic var checkHomebrew = UserDefaults.standard.bool( forKey: "checkHomebrew" )
     {
         didSet
         {

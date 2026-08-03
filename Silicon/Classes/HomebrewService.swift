@@ -202,13 +202,33 @@ public final class HomebrewService
                         }
                     }
 
-                    // App name: strip .app extension from the installed bundle name
-                    if let apps = artifact[ "app" ] as? [ String ]
+                    // App name: strip .app extension from the installed bundle name.
+                    // Each element is either a plain String or a dict {"target": "Name.app"}
+                    // when the cask renames the bundle on install.
+                    if let apps = artifact[ "app" ] as? [ Any ]
                     {
-                        for app in apps
+                        for item in apps
                         {
-                            let key = ( app as NSString ).deletingPathExtension.lowercased()
-                            if byAppName[ key ] == nil { byAppName[ key ] = entry }
+                            let name: String?
+
+                            if let s = item as? String
+                            {
+                                name = s
+                            }
+                            else if let d = item as? [ String: String ]
+                            {
+                                name = d[ "target" ]
+                            }
+                            else
+                            {
+                                name = nil
+                            }
+
+                            if let n = name
+                            {
+                                let key = ( ( n as NSString ).lastPathComponent as NSString ).deletingPathExtension.lowercased()
+                                if byAppName[ key ] == nil { byAppName[ key ] = entry }
+                            }
                         }
                     }
                 }

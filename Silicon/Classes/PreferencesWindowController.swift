@@ -116,14 +116,9 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         brewTitle.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview( brewTitle )
 
-        let mwc = ( NSApp.delegate as? ApplicationDelegate )?.mainWindowController
-        let brewCheckbox        = NSButton( checkboxWithTitle: "Check Homebrew for updated versions", target: nil, action: nil )
-        brewCheckbox.state      = ( mwc?.checkHomebrew ?? false ) ? .on : .off
+        let brewCheckbox        = NSButton( checkboxWithTitle: "Check Homebrew for updated versions", target: self, action: #selector( homebrewToggled( _: ) ) )
+        brewCheckbox.state      = UserDefaults.standard.bool( forKey: "checkHomebrew" ) ? .on : .off
         brewCheckbox.translatesAutoresizingMaskIntoConstraints = false
-        if let mwc = mwc
-        {
-            brewCheckbox.bind( .value, to: mwc, withKeyPath: "checkHomebrew", options: nil )
-        }
         contentView.addSubview( brewCheckbox )
 
         let brewInfoLabel        = NSTextField( labelWithString: "When enabled, fetches formula/cask data from Homebrew and adds version columns to the app list and exports. Data is cached for 24 hours." )
@@ -243,6 +238,19 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         folders.remove( at: row )
         self.blacklistedFolders = folders
         self.tableView.reloadData()
+    }
+
+    @objc private func homebrewToggled( _ sender: NSButton )
+    {
+        let enabled = sender.state == .on
+        if let mwc = ( NSApp.delegate as? ApplicationDelegate )?.mainWindowController
+        {
+            mwc.checkHomebrew = enabled
+        }
+        else
+        {
+            UserDefaults.standard.set( enabled, forKey: "checkHomebrew" )
+        }
     }
 
     @objc private func refreshBrewCache( _ sender: Any? )
