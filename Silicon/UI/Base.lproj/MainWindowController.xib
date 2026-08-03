@@ -12,6 +12,7 @@
                 <outlet property="archFilteredApps" destination="6hX-Gb-5gY" id="5rc-Vw-aB4"/>
                 <outlet property="arrayController" destination="Qcp-da-Tnd" id="taN-ft-TwY"/>
                 <outlet property="dropView" destination="YHH-4l-Q5Y" id="cXt-cA-utl"/>
+                <outlet property="tableView" destination="z4i-4r-iMz" id="brw-tv-OTl"/>
                 <outlet property="window" destination="4ss-uf-DBv" id="WSA-vX-Kvi"/>
             </connections>
         </customObject>
@@ -278,6 +279,7 @@ DQ
                                                     </tableColumns>
                                                     <connections>
                                                         <action trigger="doubleAction" selector="revealApp:" target="-2" id="7NC-Xl-Tvl"/>
+                                                        <outlet property="delegate" destination="-2" id="brw-dlg-OTl"/>
                                                         <binding destination="Qcp-da-Tnd" name="content" keyPath="arrangedObjects" id="zpx-JL-NfN"/>
                                                         <binding destination="Qcp-da-Tnd" name="selectionIndexes" keyPath="selectionIndexes" previousBinding="zpx-JL-NfN" id="ymj-g9-O0H"/>
                                                         <binding destination="Qcp-da-Tnd" name="sortDescriptors" keyPath="sortDescriptors" previousBinding="ymj-g9-O0H" id="OI7-Sh-5eu"/>

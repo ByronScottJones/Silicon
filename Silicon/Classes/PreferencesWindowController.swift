@@ -28,10 +28,12 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
 {
     private var tableView: NSTableView!
 
+    private var refreshButton: NSButton!
+
     public init()
     {
         let window = NSWindow(
-            contentRect: NSRect( x: 0, y: 0, width: 480, height: 380 ),
+            contentRect: NSRect( x: 0, y: 0, width: 480, height: 460 ),
             styleMask:   [ .titled, .closable ],
             backing:     .buffered,
             defer:       false
@@ -86,10 +88,10 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         scroll.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview( scroll )
 
-        let separator           = NSBox()
-        separator.boxType       = .separator
-        separator.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview( separator )
+        let listSep             = NSBox()
+        listSep.boxType         = .separator
+        listSep.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( listSep )
 
         let addButton           = NSButton( image: NSImage( named: NSImage.addTemplateName )!, target: self, action: #selector( addFolder( _: ) ) )
         addButton.bezelStyle    = .smallSquare
@@ -102,6 +104,44 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         removeButton.setButtonType( .momentaryPushIn )
         removeButton.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview( removeButton )
+
+        // Homebrew section
+        let brewSep             = NSBox()
+        brewSep.boxType         = .separator
+        brewSep.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( brewSep )
+
+        let brewTitle           = NSTextField( labelWithString: "Homebrew" )
+        brewTitle.font          = NSFont.boldSystemFont( ofSize: NSFont.systemFontSize )
+        brewTitle.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( brewTitle )
+
+        let mwc = ( NSApp.delegate as? ApplicationDelegate )?.mainWindowController
+        let brewCheckbox        = NSButton( checkboxWithTitle: "Check Homebrew for updated versions", target: nil, action: nil )
+        brewCheckbox.state      = ( mwc?.checkHomebrew ?? false ) ? .on : .off
+        brewCheckbox.translatesAutoresizingMaskIntoConstraints = false
+        if let mwc = mwc
+        {
+            brewCheckbox.bind( .value, to: mwc, withKeyPath: "checkHomebrew", options: nil )
+        }
+        contentView.addSubview( brewCheckbox )
+
+        let brewInfoLabel        = NSTextField( labelWithString: "When enabled, fetches formula/cask data from Homebrew and adds version columns to the app list and exports. Data is cached for 24 hours." )
+        brewInfoLabel.font       = NSFont.systemFont( ofSize: NSFont.smallSystemFontSize )
+        brewInfoLabel.textColor  = .secondaryLabelColor
+        brewInfoLabel.isEditable = false
+        brewInfoLabel.isBordered = false
+        brewInfoLabel.drawsBackground = false
+        brewInfoLabel.lineBreakMode   = .byWordWrapping
+        brewInfoLabel.setContentCompressionResistancePriority( .defaultLow, for: .horizontal )
+        brewInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( brewInfoLabel )
+
+        let refreshBtn           = NSButton( title: "Refresh Homebrew Cache", target: self, action: #selector( refreshBrewCache( _: ) ) )
+        refreshBtn.bezelStyle    = .rounded
+        refreshBtn.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( refreshBtn )
+        self.refreshButton       = refreshBtn
 
         NSLayoutConstraint.activate(
         [
@@ -116,14 +156,14 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
             scroll.topAnchor.constraint( equalTo: infoLabel.bottomAnchor, constant: 8 ),
             scroll.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
             scroll.trailingAnchor.constraint( equalTo: contentView.trailingAnchor, constant: -16 ),
-            scroll.bottomAnchor.constraint( equalTo: separator.topAnchor, constant: -4 ),
+            scroll.bottomAnchor.constraint( equalTo: listSep.topAnchor, constant: -4 ),
 
-            separator.leadingAnchor.constraint( equalTo: contentView.leadingAnchor ),
-            separator.trailingAnchor.constraint( equalTo: contentView.trailingAnchor ),
-            separator.bottomAnchor.constraint( equalTo: contentView.bottomAnchor, constant: -50 ),
+            listSep.leadingAnchor.constraint( equalTo: contentView.leadingAnchor ),
+            listSep.trailingAnchor.constraint( equalTo: contentView.trailingAnchor ),
+            listSep.bottomAnchor.constraint( equalTo: addButton.topAnchor, constant: -4 ),
 
             addButton.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
-            addButton.bottomAnchor.constraint( equalTo: contentView.bottomAnchor, constant: -16 ),
+            addButton.bottomAnchor.constraint( equalTo: brewSep.topAnchor, constant: -12 ),
             addButton.widthAnchor.constraint( equalToConstant: 22 ),
             addButton.heightAnchor.constraint( equalToConstant: 22 ),
 
@@ -131,6 +171,25 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
             removeButton.centerYAnchor.constraint( equalTo: addButton.centerYAnchor ),
             removeButton.widthAnchor.constraint( equalToConstant: 22 ),
             removeButton.heightAnchor.constraint( equalToConstant: 22 ),
+
+            brewSep.leadingAnchor.constraint( equalTo: contentView.leadingAnchor ),
+            brewSep.trailingAnchor.constraint( equalTo: contentView.trailingAnchor ),
+            brewSep.bottomAnchor.constraint( equalTo: brewTitle.topAnchor, constant: -8 ),
+
+            brewTitle.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
+            brewTitle.trailingAnchor.constraint( equalTo: contentView.trailingAnchor, constant: -16 ),
+            brewTitle.bottomAnchor.constraint( equalTo: brewCheckbox.topAnchor, constant: -6 ),
+
+            brewCheckbox.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
+            brewCheckbox.trailingAnchor.constraint( equalTo: contentView.trailingAnchor, constant: -16 ),
+            brewCheckbox.bottomAnchor.constraint( equalTo: brewInfoLabel.topAnchor, constant: -4 ),
+
+            brewInfoLabel.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
+            brewInfoLabel.trailingAnchor.constraint( equalTo: contentView.trailingAnchor, constant: -16 ),
+            brewInfoLabel.bottomAnchor.constraint( equalTo: refreshBtn.topAnchor, constant: -8 ),
+
+            refreshBtn.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
+            refreshBtn.bottomAnchor.constraint( equalTo: contentView.bottomAnchor, constant: -16 ),
         ] )
     }
 
@@ -184,5 +243,23 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         folders.remove( at: row )
         self.blacklistedFolders = folders
         self.tableView.reloadData()
+    }
+
+    @objc private func refreshBrewCache( _ sender: Any? )
+    {
+        self.refreshButton.isEnabled = false
+        self.refreshButton.title     = "Refreshing…"
+
+        HomebrewService.shared.forceRefresh
+        { [ weak self ] _ in
+            self?.refreshButton.isEnabled = true
+            self?.refreshButton.title     = "Refresh Homebrew Cache"
+
+            if let mwc = ( NSApp.delegate as? ApplicationDelegate )?.mainWindowController,
+               mwc.checkHomebrew
+            {
+                mwc.applyBrewLookup()
+            }
+        }
     }
 }

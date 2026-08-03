@@ -117,11 +117,24 @@ public class MainWindowController: NSWindowController
             UserDefaults.standard.set( self.sortOption, forKey: "sortOption" )
         }
     }
-    
+
+    @objc public private( set ) dynamic var checkHomebrew = UserDefaults.standard.bool( forKey: "checkHomebrew" )
+    {
+        didSet
+        {
+            UserDefaults.standard.set( self.checkHomebrew, forKey: "checkHomebrew" )
+            self.updateBrewColumns()
+        }
+    }
+
     @IBOutlet public private( set ) dynamic var allApps:          NSArrayController!
     @IBOutlet public private( set ) dynamic var archFilteredApps: NSArrayController!
     @IBOutlet public private( set ) dynamic var arrayController:  NSArrayController!
     @IBOutlet public private( set ) dynamic var dropView:         DropView!
+    @IBOutlet private               weak var   tableView:         NSTableView!
+
+    private var brewNameColumn:    NSTableColumn?
+    private var brewVersionColumn: NSTableColumn?
     
     public override var windowNibName: NSNib.Name?
     {
@@ -133,6 +146,8 @@ public class MainWindowController: NSWindowController
         super.windowDidLoad()
         self.updateArchFilter()
         self.updateSort()
+        self.addBrewColumns()
+        self.tableView.delegate = self
         
         self.window?.setContentBorderThickness( 0, for: .minY )
         
@@ -291,10 +306,15 @@ public class MainWindowController: NSWindowController
         DispatchQueue.global( qos: .userInitiated ).async
         {
             self.findApps()
-            
+
             DispatchQueue.main.async
             {
                 self.loading = false
+
+                if self.checkHomebrew
+                {
+                    self.runBrewLookup()
+                }
             }
         }
     }
@@ -329,19 +349,26 @@ public class MainWindowController: NSWindowController
         { response in
             guard response == .OK, let url = panel.url else { return }
 
-            var lines = [ "Name,Architecture,Version,Bundle ID,Path" ]
+            var header = "Name,Architecture,Version,Bundle ID,Path"
+            if self.checkHomebrew { header += ",Brew Formula,Brew Version" }
+            var lines = [ header ]
 
             for app in apps
             {
-                lines.append(
-                    [
-                        self.csvField( app.name ),
-                        self.csvField( app.architecture ),
-                        self.csvField( app.version ?? "" ),
-                        self.csvField( app.bundleID ?? "" ),
-                        self.csvField( app.path )
-                    ].joined( separator: "," )
-                )
+                var fields =
+                [
+                    self.csvField( app.name ),
+                    self.csvField( app.architecture ),
+                    self.csvField( app.version ?? "" ),
+                    self.csvField( app.bundleID ?? "" ),
+                    self.csvField( app.path )
+                ]
+                if self.checkHomebrew
+                {
+                    fields.append( self.csvField( app.brewToken   ?? "" ) )
+                    fields.append( self.csvField( app.brewVersion ?? "" ) )
+                }
+                lines.append( fields.joined( separator: "," ) )
             }
 
             do
@@ -374,6 +401,8 @@ public class MainWindowController: NSWindowController
         { response in
             guard response == .OK, let url = panel.url else { return }
 
+            let brewCols = self.checkHomebrew
+
             let rows = apps.map
             { app -> String in
                 let name     = self.htmlEscape( app.name )
@@ -381,8 +410,14 @@ public class MainWindowController: NSWindowController
                 let version  = self.htmlEscape( app.version ?? "—" )
                 let bundleID = self.htmlEscape( app.bundleID ?? "—" )
                 let path     = self.htmlEscape( app.path )
-
-                return "        <tr><td>\(name)</td><td>\(arch)</td><td>\(version)</td><td>\(bundleID)</td><td class=\"path\">\(path)</td></tr>"
+                var row      = "<tr><td>\(name)</td><td>\(arch)</td><td>\(version)</td><td>\(bundleID)</td><td class=\"path\">\(path)</td>"
+                if brewCols
+                {
+                    let token   = self.htmlEscape( app.brewToken   ?? "—" )
+                    let brewVer = self.htmlEscape( app.brewVersion ?? "—" )
+                    row += "<td>\(token)</td><td>\(brewVer)</td>"
+                }
+                return "        " + row + "</tr>"
             }.joined( separator: "\n" )
 
             let count  = apps.count
@@ -410,7 +445,7 @@ public class MainWindowController: NSWindowController
                 <p class="sub">\(count) application\(plural)</p>
                 <table>
                     <thead>
-                        <tr><th>Name</th><th>Architecture</th><th>Version</th><th>Bundle ID</th><th>Path</th></tr>
+                        <tr><th>Name</th><th>Architecture</th><th>Version</th><th>Bundle ID</th><th>Path</th>\(brewCols ? "<th>Brew Formula</th><th>Brew Version</th>" : "")</tr>
                     </thead>
                     <tbody>
             \(rows)
@@ -446,6 +481,79 @@ public class MainWindowController: NSWindowController
             .replacingOccurrences( of: "\"", with: "&quot;" )
     }
     
+    // MARK: - Homebrew
+
+    private func addBrewColumns()
+    {
+        let nameCol = NSTableColumn( identifier: .init( "brewToken" ) )
+        nameCol.title    = "Brew Formula"
+        nameCol.minWidth = 80
+        nameCol.width    = 130
+        nameCol.maxWidth = 300
+        nameCol.isHidden = !self.checkHomebrew
+        self.tableView.addTableColumn( nameCol )
+        self.brewNameColumn = nameCol
+
+        let versionCol = NSTableColumn( identifier: .init( "brewVersion" ) )
+        versionCol.title    = "Brew Version"
+        versionCol.minWidth = 60
+        versionCol.width    = 100
+        versionCol.maxWidth = 200
+        versionCol.isHidden = !self.checkHomebrew
+        self.tableView.addTableColumn( versionCol )
+        self.brewVersionColumn = versionCol
+    }
+
+    private func updateBrewColumns()
+    {
+        self.brewNameColumn?.isHidden    = !self.checkHomebrew
+        self.brewVersionColumn?.isHidden = !self.checkHomebrew
+
+        if self.checkHomebrew
+        {
+            let apps = self.allApps.content as? [ App ] ?? []
+            if !apps.isEmpty { self.runBrewLookup() }
+        }
+        else
+        {
+            for app in ( self.allApps.content as? [ App ] ?? [] )
+            {
+                app.brewToken   = nil
+                app.brewVersion = nil
+            }
+            self.tableView?.reloadData()
+        }
+    }
+
+    private func runBrewLookup()
+    {
+        HomebrewService.shared.load
+        { [ weak self ] error in
+            guard let self = self, error == nil else { return }
+            self.applyBrewLookup()
+        }
+    }
+
+    func applyBrewLookup()
+    {
+        for app in ( self.allApps.content as? [ App ] ?? [] )
+        {
+            if let entry = HomebrewService.shared.lookup( bundleID: app.bundleID, appName: app.name )
+            {
+                app.brewToken   = entry.token
+                app.brewVersion = entry.version
+            }
+            else
+            {
+                app.brewToken   = nil
+                app.brewVersion = nil
+            }
+        }
+        self.tableView.reloadData()
+    }
+
+    // MARK: - Scan
+
     private func findApps()
     {
         if self.appsFolderOnly
@@ -537,5 +645,58 @@ public class MainWindowController: NSWindowController
                 e = enumerator.nextObject()
             }
         }
+    }
+}
+
+// MARK: - NSTableViewDelegate
+
+extension MainWindowController: NSTableViewDelegate
+{
+    public func tableView( _ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int ) -> NSView?
+    {
+        guard let col = tableColumn else { return nil }
+
+        switch col.identifier.rawValue
+        {
+            case "brewToken", "brewVersion": break
+            default: return nil
+        }
+
+        let cellID = NSUserInterfaceItemIdentifier( "BrewTextCell" )
+
+        let cell: NSTableCellView
+
+        if let existing = tableView.makeView( withIdentifier: cellID, owner: self ) as? NSTableCellView
+        {
+            cell = existing
+        }
+        else
+        {
+            let newCell   = NSTableCellView()
+            let textField = NSTextField( labelWithString: "" )
+            textField.font                      = NSFont.systemFont( ofSize: NSFont.systemFontSize - 1 )
+            textField.lineBreakMode             = .byTruncatingMiddle
+            textField.translatesAutoresizingMaskIntoConstraints = false
+            newCell.addSubview( textField )
+            newCell.textField = textField
+            newCell.identifier = cellID
+            NSLayoutConstraint.activate(
+            [
+                textField.leadingAnchor.constraint( equalTo: newCell.leadingAnchor, constant: 4 ),
+                textField.trailingAnchor.constraint( equalTo: newCell.trailingAnchor, constant: -4 ),
+                textField.centerYAnchor.constraint( equalTo: newCell.centerYAnchor )
+            ] )
+            cell = newCell
+        }
+
+        let apps = self.arrayController.arrangedObjects as? [ App ] ?? []
+        guard row < apps.count else { return cell }
+        let app = apps[ row ]
+
+        cell.textField?.stringValue = col.identifier.rawValue == "brewToken"
+            ? ( app.brewToken   ?? "—" )
+            : ( app.brewVersion ?? "—" )
+
+        return cell
     }
 }

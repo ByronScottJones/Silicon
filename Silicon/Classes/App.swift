@@ -34,6 +34,8 @@ import Cocoa
     @objc public private( set ) var isAppleSiliconReady: Bool
     @objc public private( set ) var architecture:        String
     @objc public private( set ) var bundleID:            String?
+    @objc public            dynamic var brewToken:        String?
+    @objc public            dynamic var brewVersion:      String?
     
     public init?( path: String )
     {
