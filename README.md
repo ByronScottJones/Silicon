@@ -12,9 +12,13 @@ About
 
 Identify the binary architecture of every app installed on your Mac:
 
-![Silicon](Assets/Screen.png "Silicon")
-
 Silicon scans `.app` bundles, parses their Mach-O executables, and classifies each application as Apple Silicon (ARM), Universal, Intel 64, Intel 32, or PowerPC — or any combination. It optionally cross-references Homebrew to show the latest available version alongside each installed app.
+
+![Main window](Assets/Screen1.png "Main window")
+
+![Preferences](Assets/Screen2.png "Preferences")
+
+![Export menu](Assets/Screen3.png "Export menu")
 
 Features
 --------
