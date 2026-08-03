@@ -73,3 +73,11 @@ Repository Infos
 
     Fork Owner:     Byron Scott Jones
     Fork Github:    ByronScottJones/silicon
+
+# AI Disclaimer
+This application was updated with the assistance of Claude.ai
+The code was reviewed and tested by Byron Scott Jones, a real actual human developer with nearly 50 years of experience. If you do not like that I used AI, tough.
+
+In the words of Bender:
+
+![Bender](Assets/futurama-bender.gif "Bender - Bite My Shiny Metal Ass")
