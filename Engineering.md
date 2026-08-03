@@ -127,8 +127,13 @@ All model properties exposed to the UI are marked `@objc dynamic`. The XIBs bind
 ### Build
 Open `Silicon.xcodeproj` in Xcode and build the `Silicon` scheme, or use:
 ```bash
-xcodebuild -project Silicon.xcodeproj -scheme Silicon -configuration Debug build
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+xcodebuild -project Silicon.xcodeproj -scheme Silicon -configuration Debug \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+  OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion" \
+  build
 ```
+The `OTHER_CFLAGS` override suppresses implicit-conversion warnings in the `GitHubUpdates` submodule, which uses strict xcconfig warning settings incompatible with newer Clang versions. Xcode IDE builds are unaffected — this is a command-line workaround only.
 
 ### Release
 The Release build configuration auto-populates `CFBundleVersion` from `git rev-list --count HEAD` via a build phase shell script.
