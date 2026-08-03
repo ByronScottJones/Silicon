@@ -6,7 +6,7 @@ This document describes how AI coding agents should understand and work within t
 
 ## What This App Does
 
-Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports each application's CPU architecture(s). The central question it answers is: "Does this app run natively on Apple Silicon, or does it require Rosetta 2 emulation?"
+Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports each application's CPU architecture(s). It can also cross-reference Homebrew to show the latest available version for each installed app. The central questions it answers are: "Does this app run natively on Apple Silicon?" and "Is there a newer version available via Homebrew?"
 
 ---
 
@@ -19,8 +19,10 @@ Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports eac
 | Data binding | `@objc dynamic` + `NSArrayController` |
 | Persistence | `UserDefaults` |
 | Concurrency | GCD (`DispatchQueue`) |
+| Networking | `URLSession` + `DispatchGroup` |
 | Build | Xcode project only (no SPM) |
 | Updates | `GitHubUpdates` submodule framework |
+| CI | GitHub Actions (`.github/workflows/`) |
 
 ---
 
@@ -30,11 +32,15 @@ Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports eac
 |------|---------|
 | App model / architecture classification | `Silicon/Classes/App.swift` |
 | Mach-O binary parsing | `Silicon/Classes/MachOFile.swift` |
-| Scan logic, filter state, sorting | `Silicon/Classes/MainWindowController.swift` |
+| Scan logic, filter state, sorting, brew columns | `Silicon/Classes/MainWindowController.swift` |
+| Homebrew cask/formula fetch and lookup | `Silicon/Classes/HomebrewService.swift` |
 | Main window UI layout | `Silicon/UI/Base.lproj/MainWindowController.xib` |
 | App entry point | `Silicon/Classes/ApplicationDelegate.swift` |
+| Preferences window (blacklist + Homebrew toggle) | `Silicon/Classes/PreferencesWindowController.swift` |
 | Drag-and-drop support | `Silicon/Classes/DropView.swift` |
 | Persisted settings keys | Properties in `MainWindowController.swift` with `UserDefaults` in `didSet` |
+| CI workflow | `.github/workflows/ci.yaml` |
+| Release workflow | `.github/workflows/release.yaml` |
 
 ---
 
@@ -78,8 +84,38 @@ Key skip conditions already in place:
 - Non-`.app` paths are skipped
 - If `recurseIntoApps` is false, `enumerator.skipDescendents()` is called after finding a `.app`
 - `com.apple.*` bundles are optionally excluded at the main-queue insertion point
+- Paths matching any entry in `folderBlacklist` cause `enumerator.skipDescendents()`
 
-When adding new skip conditions (e.g., folder blacklists), add them in the background-thread enumeration body, before the `App(path:)` initialization, to avoid wasting work.
+When adding new skip conditions, add them in the background-thread enumeration body, before the `App(path:)` initialization, to avoid wasting work.
+
+---
+
+## Homebrew Lookup
+
+`HomebrewService.shared` fetches cask and formula JSON from Homebrew in parallel, caches them under `~/.Silicon/homebrew_cache/` for 24 hours, then exposes a single `lookup(bundleID:appName:) -> Entry?` method.
+
+Lookup priority (highest to lowest confidence):
+1. Bundle ID → cask (from `artifacts[].uninstall[].quit`)
+2. App display name → cask (from `artifacts[].app[]`)
+3. App display name → formula (from `name`)
+
+After a scan completes, if `checkHomebrew` is enabled, `MainWindowController.runBrewLookup()` calls `HomebrewService.shared.load` then `applyBrewLookup()`, which writes `brewToken` and `brewVersion` onto each `App` and calls `tableView.reloadData()`.
+
+**Important**: The `artifacts["app"]` array can contain plain strings (`"Firefox.app"`) or dicts (`{"target": "App.app"}`). Always cast to `[Any]` and check each element as both `String` and `[String: String]`.
+
+---
+
+## NSTableViewDelegate and Prototype Cells
+
+The main NSTableView is **view-based** with a delegate set. When a delegate is present, `tableView(_:viewFor:row:)` must explicitly dequeue prototype cells via `makeView(withIdentifier:owner:)` — returning `nil` renders nothing (the prototype is not used automatically). The prototype cell's `identifier` in the XIB must match the column identifier exactly.
+
+Dynamically-added columns (Brew Formula, Brew Version) create their cells programmatically in the delegate since they have no prototype in the XIB.
+
+---
+
+## Cocoa Bindings — Timing Gotcha
+
+`PreferencesWindowController` is instantiated as a stored property of `ApplicationDelegate`, meaning it initializes before `NSApp.delegate` is set. Any code in `PreferencesWindowController.init()` that tries `NSApp.delegate as? ApplicationDelegate` will get `nil`. Use target/action for controls that need to call back to `MainWindowController`, getting `NSApp.delegate` lazily at action time.
 
 ---
 
@@ -91,8 +127,8 @@ When adding new skip conditions (e.g., folder blacklists), add them in the backg
        didSet { UserDefaults.standard.set(self.myNewSetting, forKey: "myNewSetting") }
    }
    ```
-2. For array/dictionary types, use `UserDefaults.standard.array(forKey:)` / `stringArray(forKey:)` and encode with `set(_:forKey:)`.
-3. Bind the corresponding UI control to `File's Owner` in Interface Builder using the property name.
+2. For settings that need to be writable from an external class via Cocoa Bindings, omit `private(set)` — KVC treats `private(set)` as read-only from other modules.
+3. For array/dictionary types, use `UserDefaults.standard.array(forKey:)` / `stringArray(forKey:)` and encode with `set(_:forKey:)`.
 
 ---
 
@@ -113,15 +149,15 @@ When adding new skip conditions (e.g., folder blacklists), add them in the backg
 
 ```swift
 // Single arch
-NSPredicate(format: "ANY architectures == 'arm64'")
+NSPredicate(format: "ANY architectures == %@", "arm64")
 
-// Multiple arches (OR)
-NSPredicate(format: "ANY architectures == 'arm64' OR ANY architectures == 'x86_64'")
+// Multi-arch (Universal)
+NSPredicate(format: "architectures.@count > 1")
 
-// Compound with NSCompoundPredicate
-let subpredicates = checkedArchs.map {
-    NSPredicate(format: "ANY architectures == %@", $0)
-}
+// Non-ARM
+NSPredicate(format: "NOT (ANY architectures BEGINSWITH %@)", "arm")
+
+// Compound OR
 let predicate = NSCompoundPredicate(orPredicateWithSubpredicates: subpredicates)
 ```
 
@@ -144,6 +180,21 @@ panel.beginSheetModal(for: self.window!) { response in
 }
 ```
 
+When `checkHomebrew` is enabled, append `app.brewToken` and `app.brewVersion` columns to both CSV and HTML exports.
+
+---
+
+## CI / Release
+
+- **CI** (`.github/workflows/ci.yaml`): Builds Debug + Release on every push/PR to `main`. Uses `OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion"` to suppress warnings from the `GitHubUpdates` submodule's xcconfig.
+- **Release** (`.github/workflows/release.yaml`): Triggered by pushing a `v*.*.*` tag. Builds Release, zips `Silicon.app` with `ditto`, and publishes a GitHub Release with the archive.
+
+To cut a release:
+```bash
+git tag v1.x.y
+git push origin v1.x.y
+```
+
 ---
 
 ## Things to Avoid
@@ -154,3 +205,4 @@ panel.beginSheetModal(for: self.window!) { response in
 - Do not call `UserDefaults.synchronize()` — it is deprecated and unnecessary.
 - Do not add a `ppc64` CPU type without verifying the constant against Apple's `<mach/machine.h>` (it is `18 | 0x01000000`).
 - This app has no sandbox entitlements intentionally — do not add sandbox entitlements without understanding the access implications for filesystem scanning.
+- Do not cache `NSApp.delegate` at init time from a stored property initializer — it is nil until after the delegate object finishes initializing.

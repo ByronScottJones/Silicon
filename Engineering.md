@@ -139,7 +139,10 @@ The `OTHER_CFLAGS` override suppresses implicit-conversion warnings in the `GitH
 The Release build configuration auto-populates `CFBundleVersion` from `git rev-list --count HEAD` via a build phase shell script.
 
 ### CI
-GitHub Actions runs `ci-mac.yaml` on push/PR. It builds both Debug and Release configurations on a `macos-latest` runner.
+GitHub Actions runs `.github/workflows/ci.yaml` on push and pull requests to `main`. It builds both Debug and Release configurations on a `macos-latest` runner using the same `OTHER_CFLAGS` override required locally.
+
+### Release
+Pushing a tag matching `v*.*.*` triggers `.github/workflows/release.yaml`, which builds the Release configuration, zips `Silicon.app` with `ditto`, and publishes a GitHub Release with the archive attached. Release notes are auto-generated from commits since the previous tag.
 
 ---
 
@@ -176,7 +179,7 @@ For non-Bool types that may not have a stored value yet (like the initial `appsF
 ## Features
 
 ### Architecture Filter Checkboxes (v1.1)
-Four independent checkboxes in the bottom bar — Intel 32, Intel 64, PowerPC, Apple ARM — replace the old single-selection filter popup. Each maps to a raw arch string (`i386`, `x86_64`, `ppc`, `arm64`) checked against `App.architectures` via `NSCompoundPredicate`. All checked or all unchecked shows everything.
+Six independent checkboxes in the bottom bar: Intel 32, Intel 64, PowerPC, Apple ARM, Universal, and Non-ARM. Each maps to an `NSPredicate` against `App.architectures`: single-arch types use `ANY architectures == %@`; Universal uses `architectures.@count > 1`; Non-ARM uses `NOT (ANY architectures BEGINSWITH "arm")`. Combined with `NSCompoundPredicate(orPredicateWithSubpredicates:)`. All checked or all unchecked shows everything (filter predicate set to `nil`).
 
 ### Sort Options (v1.1)
 A "Sort By" popup in the bottom bar with six options: Name/Architecture/Path each ascending and descending. Selection drives `arrayController.sortDescriptors` via `updateSort()`. Persisted in `UserDefaults.sortOption`.
@@ -186,6 +189,16 @@ File > Export to CSV… / Export to HTML… exports the currently visible (filte
 
 ### Folder Blacklist / Preferences (v1.1)
 Silicon > Preferences (⌘,) opens `PreferencesWindowController` — a programmatic (no XIB) window with a table of excluded folder paths. Paths are stored as `[String]` in `UserDefaults` under `"folderBlacklist"`. During `findApps(in:)`, any path that has a blacklisted prefix causes `enumerator.skipDescendents()` so entire directory trees are skipped efficiently.
+
+### Homebrew Lookup (v1.1)
+`HomebrewService` fetches `https://formulae.brew.sh/api/cask.json` and `https://formulae.brew.sh/api/formula.json` in parallel on a background queue using `URLSession` + `DispatchGroup`. Results are cached under `~/.Silicon/homebrew_cache/` with a 24-hour TTL. Lookup priority: bundle ID → app display name → formula name. Bundle IDs are extracted from `artifacts[].uninstall[].quit` in the cask JSON; app names from `artifacts[].app[]` which can be either plain strings or `{"target": "Name.app"}` dicts.
+
+Persisted `UserDefaults` keys added in v1.1:
+| Key | Type | Default | Meaning |
+|-----|------|---------|---------|
+| `showUniversal` | Bool | `true` | Show Universal (multi-arch) apps in results |
+| `showNonARM` | Bool | `true` | Show non-ARM apps in results |
+| `checkHomebrew` | Bool | `false` | Fetch and display Homebrew version data |
 
 ## Known Limitations
 
