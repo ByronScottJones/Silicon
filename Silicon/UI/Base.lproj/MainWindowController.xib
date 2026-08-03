@@ -19,9 +19,9 @@
         <window title="Silicon" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" frameAutosaveName="" animationBehavior="default" titlebarAppearsTransparent="YES" id="4ss-uf-DBv">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" fullSizeContentView="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="239" width="1000" height="528"/>
+            <rect key="contentRect" x="196" y="239" width="1120" height="528"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1175"/>
-            <value key="minSize" type="size" width="1000" height="528"/>
+            <value key="minSize" type="size" width="1120" height="528"/>
             <view key="contentView" id="S4c-Zh-clU">
                 <rect key="frame" x="0.0" y="0.0" width="800" height="528"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -414,6 +414,26 @@ DQ
                                             <binding destination="-2" name="value" keyPath="self.showAppleARM" id="arm-cb-Bnd"/>
                                         </connections>
                                     </button>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="uni-cb-Btn">
+                                        <rect key="frame" x="698" y="10" width="76" height="18"/>
+                                        <buttonCell key="cell" type="check" title="Universal" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="uni-cb-Cel">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.showUniversal" id="uni-cb-Bnd"/>
+                                        </connections>
+                                    </button>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="nar-cb-Btn">
+                                        <rect key="frame" x="782" y="10" width="74" height="18"/>
+                                        <buttonCell key="cell" type="check" title="Non-ARM" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="nar-cb-Cel">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.showNonARM" id="nar-cb-Bnd"/>
+                                        </connections>
+                                    </button>
                                     <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2P9-ac-fjj">
                                         <rect key="frame" x="467" y="8" width="325" height="22"/>
                                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="tJe-P9-fC8">
@@ -459,12 +479,16 @@ DQ
                                     <constraint firstItem="i64-cb-Btn" firstAttribute="leading" secondItem="i32-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c02-i6-ld"/>
                                     <constraint firstItem="ppc-cb-Btn" firstAttribute="leading" secondItem="i64-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c03-pp-ld"/>
                                     <constraint firstItem="arm-cb-Btn" firstAttribute="leading" secondItem="ppc-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c04-ar-ld"/>
-                                    <constraint firstItem="2P9-ac-fjj" firstAttribute="leading" secondItem="arm-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c05-sf-ld"/>
+                                    <constraint firstItem="uni-cb-Btn" firstAttribute="leading" secondItem="arm-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c05-un-ld"/>
+                                    <constraint firstItem="nar-cb-Btn" firstAttribute="leading" secondItem="uni-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c11-na-ld"/>
+                                    <constraint firstItem="2P9-ac-fjj" firstAttribute="leading" secondItem="nar-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c12-sf-ld"/>
                                     <constraint firstItem="srt-pp-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c06-st-cy"/>
                                     <constraint firstItem="i32-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c07-i3-cy"/>
                                     <constraint firstItem="i64-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c08-i6-cy"/>
                                     <constraint firstItem="ppc-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c09-pp-cy"/>
                                     <constraint firstItem="arm-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c10-ar-cy"/>
+                                    <constraint firstItem="uni-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c13-un-cy"/>
+                                    <constraint firstItem="nar-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c14-na-cy"/>
                                 </constraints>
                                 <connections>
                                     <binding destination="-2" name="hidden" keyPath="self.started" id="cQi-ue-O7a">

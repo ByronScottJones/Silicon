@@ -91,6 +91,24 @@ public class MainWindowController: NSWindowController
         }
     }
 
+    @objc public private( set ) dynamic var showUniversal = UserDefaults.standard.value( forKey: "showUniversal" ) == nil ? true : UserDefaults.standard.bool( forKey: "showUniversal" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showUniversal, forKey: "showUniversal" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showNonARM = UserDefaults.standard.value( forKey: "showNonARM" ) == nil ? true : UserDefaults.standard.bool( forKey: "showNonARM" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showNonARM, forKey: "showNonARM" )
+        }
+    }
+
     @objc public private( set ) dynamic var sortOption = UserDefaults.standard.integer( forKey: "sortOption" )
     {
         didSet
@@ -169,21 +187,21 @@ public class MainWindowController: NSWindowController
 
     private func updateArchFilter()
     {
-        var checked: [ String ] = []
+        var subpredicates: [ NSPredicate ] = []
 
-        if self.showIntel32  { checked.append( "i386" ) }
-        if self.showIntel64  { checked.append( "x86_64" ) }
-        if self.showPowerPC  { checked.append( "ppc" ) }
-        if self.showAppleARM { checked.append( "arm64" ) }
+        if self.showIntel32   { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "i386" ) ) }
+        if self.showIntel64   { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "x86_64" ) ) }
+        if self.showPowerPC   { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "ppc" ) ) }
+        if self.showAppleARM  { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "arm64" ) ) }
+        if self.showUniversal { subpredicates.append( NSPredicate( format: "architectures.@count > 1" ) ) }
+        if self.showNonARM    { subpredicates.append( NSPredicate( format: "NOT ( ANY architectures BEGINSWITH %@ )", "arm" ) ) }
 
-        if checked.isEmpty || checked.count == 4
+        if subpredicates.isEmpty || subpredicates.count == 6
         {
             self.archFilteredApps.filterPredicate = nil
 
             return
         }
-
-        let subpredicates = checked.map { NSPredicate( format: "ANY architectures == %@", $0 ) }
 
         self.archFilteredApps.filterPredicate = NSCompoundPredicate( orPredicateWithSubpredicates: subpredicates )
     }
@@ -218,11 +236,13 @@ public class MainWindowController: NSWindowController
         let reset =
         {
             self.appCount     = 0
-            self.showIntel32  = true
-            self.showIntel64  = true
-            self.showPowerPC  = true
-            self.showAppleARM = true
-            self.sortOption   = 0
+            self.showIntel32   = true
+            self.showIntel64   = true
+            self.showPowerPC   = true
+            self.showAppleARM  = true
+            self.showUniversal = true
+            self.showNonARM    = true
+            self.sortOption    = 0
             self.loading      = false
             self.stop         = false
             self.started      = false
