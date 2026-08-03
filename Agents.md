@@ -184,15 +184,36 @@ When `checkHomebrew` is enabled, append `app.brewToken` and `app.brewVersion` co
 
 ---
 
+## Table Column Headers
+
+The XIB's `NSScrollView` has no `headerView` clip view, so the column header bar must be installed programmatically. In `windowDidLoad`:
+
+```swift
+self.tableView.headerView = NSTableHeaderView()
+```
+
+Setting `headerView` on NSTableView causes it to "reset its scroll view to accommodate the specified header view" (Apple docs). The main column title is set via `title` on the `tableHeaderCell` in the XIB. Brew columns get titles from `addBrewColumns()`.
+
+**Do not** try to add `<clipView key="headerView">` inside `<scrollView>` in the XIB — `ibtool` rejects it (error -1) because NSScrollView has no public KVC setter for `headerView`.
+
+## Welcome Screen
+
+`addFeaturesLabel()` in `windowDidLoad` adds a left-panel bullet list to the `DropView`. The `DropView` is bound to `self.started` (hidden once a scan begins), so the feature list disappears automatically when the table populates. The label sits at leading+40pt, width 280pt, centered vertically — well clear of the centered icon/button content.
+
+## Help Menu
+
+The Help menu in `MainMenu.xib` was previously `hidden="YES"`. It is now visible and contains a **GitHub Repository** item that sends `openGitHub:` through the responder chain to `ApplicationDelegate.openGitHub(_:)`, which opens the repo URL via `NSWorkspace.shared.open(_:)`.
+
 ## CI / Release
 
 - **CI** (`.github/workflows/ci.yaml`): Builds Debug + Release on every push/PR to `main`. Uses `OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion"` to suppress warnings from the `GitHubUpdates` submodule's xcconfig.
-- **Release** (`.github/workflows/release.yaml`): Triggered by pushing a `v*.*.*` tag. Builds Release, zips `Silicon.app` with `ditto`, and publishes a GitHub Release with the archive.
+- **Release** (`.github/workflows/release.yaml`): Triggered by pushing a `v*.*.*` tag. Builds Release, zips `Silicon.app` with `ditto`, and publishes a GitHub Release with the archive. Release notes are written manually with `gh release create`.
 
 To cut a release:
 ```bash
 git tag v1.x.y
 git push origin v1.x.y
+gh release create v1.x.y --title "Silicon v1.x.y" --notes "..."
 ```
 
 ---

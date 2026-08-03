@@ -116,6 +116,10 @@ All model properties exposed to the UI are marked `@objc dynamic`. The XIBs bind
 1. Mark the property `@objc public private(set) dynamic var` in the controller.
 2. In Interface Builder, bind the UI control to `File's Owner` (the window controller) or to the relevant `NSArrayController`.
 
+**`private(set)` gotcha:** Properties marked `@objc public private(set) dynamic` are read-only from other modules via KVC. Cocoa Bindings from an external class (e.g. `PreferencesWindowController` binding to `MainWindowController`) will silently fail to write. Use `@objc public dynamic var` (no `private(set)`) for any property that must be set via a binding from another class.
+
+**Binding timing gotcha:** `PreferencesWindowController` is instantiated as a stored property of `ApplicationDelegate`, which means its `init` runs before `NSApp.delegate` is set. Any code in `PreferencesWindowController.init` that calls `NSApp.delegate as? ApplicationDelegate` will get `nil`. Use target/action (not bindings) for controls in `PreferencesWindowController` that need to call back to `MainWindowController`, resolving `NSApp.delegate` lazily at action time.
+
 ---
 
 ## Building
@@ -142,7 +146,14 @@ The Release build configuration auto-populates `CFBundleVersion` from `git rev-l
 GitHub Actions runs `.github/workflows/ci.yaml` on push and pull requests to `main`. It builds both Debug and Release configurations on a `macos-latest` runner using the same `OTHER_CFLAGS` override required locally.
 
 ### Release
-Pushing a tag matching `v*.*.*` triggers `.github/workflows/release.yaml`, which builds the Release configuration, zips `Silicon.app` with `ditto`, and publishes a GitHub Release with the archive attached. Release notes are auto-generated from commits since the previous tag.
+Pushing a tag matching `v*.*.*` triggers `.github/workflows/release.yaml`, which builds the Release configuration, zips `Silicon.app` with `ditto`, and publishes a GitHub Release with the archive attached. Release notes are written manually via `gh release edit`.
+
+To cut a release:
+```bash
+git tag v1.x.y
+git push origin v1.x.y
+gh release create v1.x.y --title "Silicon v1.x.y" --notes "..."
+```
 
 ---
 
@@ -199,6 +210,17 @@ Persisted `UserDefaults` keys added in v1.1:
 | `showUniversal` | Bool | `true` | Show Universal (multi-arch) apps in results |
 | `showNonARM` | Bool | `true` | Show non-ARM apps in results |
 | `checkHomebrew` | Bool | `false` | Fetch and display Homebrew version data |
+
+### Table Column Headers (v1.1.1)
+The XIB's `NSScrollView` was built without a `headerView` clip view, so `NSTableView`'s header bar was never rendered. Fix: in `windowDidLoad`, assign `self.tableView.headerView = NSTableHeaderView()`. Per Apple's docs, setting `headerView` causes NSTableView to "reset its scroll view to accommodate the specified header view." The main column title ("Application") is set via `title` on the `tableHeaderCell` in the XIB. The Brew Formula / Brew Version columns get their titles from `addBrewColumns()`.
+
+> **Note:** Do not attempt to add `<clipView key="headerView">` directly inside `<scrollView>` in the XIB — `ibtool` rejects it with error -1 because NSScrollView has no public `setHeaderView:` KVC setter.
+
+### Welcome Screen Features List (v1.1.1)
+`addFeaturesLabel()` in `windowDidLoad` programmatically adds a left-panel bullet list to the `DropView` (the welcome screen shown before scanning). The label is constrained to the leading edge of the DropView at 40pt margin, 280pt wide, centered vertically. Because `DropView` is hidden once scanning starts (bound to `self.started`), the label is automatically hidden during and after scans.
+
+### Help Menu GitHub Link (v1.1.1)
+The Help menu (`MainMenu.xib`) was previously `hidden="YES"`. It is now visible and contains a **GitHub Repository** menu item that sends `openGitHub:` through the responder chain. `ApplicationDelegate.openGitHub(_:)` opens `https://github.com/ByronScottJones/silicon` via `NSWorkspace.shared.open(_:)`.
 
 ## Known Limitations
 
