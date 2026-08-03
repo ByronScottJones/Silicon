@@ -55,19 +55,86 @@ public class MainWindowController: NSWindowController
         }
     }
 
-    @objc public private( set ) dynamic var archFilter = UserDefaults.standard.integer( forKey: "archFilter" )
+    @objc public private( set ) dynamic var showIntel32 = UserDefaults.standard.value( forKey: "showIntel32" ) == nil ? true : UserDefaults.standard.bool( forKey: "showIntel32" )
     {
         didSet
         {
             self.updateArchFilter()
-            UserDefaults.standard.set( self.archFilter, forKey: "archFilter" )
+            UserDefaults.standard.set( self.showIntel32, forKey: "showIntel32" )
         }
     }
-    
+
+    @objc public private( set ) dynamic var showIntel64 = UserDefaults.standard.value( forKey: "showIntel64" ) == nil ? true : UserDefaults.standard.bool( forKey: "showIntel64" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showIntel64, forKey: "showIntel64" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showPowerPC = UserDefaults.standard.value( forKey: "showPowerPC" ) == nil ? true : UserDefaults.standard.bool( forKey: "showPowerPC" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showPowerPC, forKey: "showPowerPC" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showAppleARM = UserDefaults.standard.value( forKey: "showAppleARM" ) == nil ? true : UserDefaults.standard.bool( forKey: "showAppleARM" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showAppleARM, forKey: "showAppleARM" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showUniversal = UserDefaults.standard.value( forKey: "showUniversal" ) == nil ? true : UserDefaults.standard.bool( forKey: "showUniversal" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showUniversal, forKey: "showUniversal" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showNonARM = UserDefaults.standard.value( forKey: "showNonARM" ) == nil ? true : UserDefaults.standard.bool( forKey: "showNonARM" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showNonARM, forKey: "showNonARM" )
+        }
+    }
+
+    @objc public private( set ) dynamic var sortOption = UserDefaults.standard.integer( forKey: "sortOption" )
+    {
+        didSet
+        {
+            self.updateSort()
+            UserDefaults.standard.set( self.sortOption, forKey: "sortOption" )
+        }
+    }
+
+    @objc public dynamic var checkHomebrew = UserDefaults.standard.bool( forKey: "checkHomebrew" )
+    {
+        didSet
+        {
+            UserDefaults.standard.set( self.checkHomebrew, forKey: "checkHomebrew" )
+            self.updateBrewColumns()
+        }
+    }
+
     @IBOutlet public private( set ) dynamic var allApps:          NSArrayController!
     @IBOutlet public private( set ) dynamic var archFilteredApps: NSArrayController!
     @IBOutlet public private( set ) dynamic var arrayController:  NSArrayController!
     @IBOutlet public private( set ) dynamic var dropView:         DropView!
+    @IBOutlet private               weak var   tableView:         NSTableView!
+
+    private var brewNameColumn:    NSTableColumn?
+    private var brewVersionColumn: NSTableColumn?
     
     public override var windowNibName: NSNib.Name?
     {
@@ -78,12 +145,12 @@ public class MainWindowController: NSWindowController
     {
         super.windowDidLoad()
         self.updateArchFilter()
-        
-        self.arrayController.sortDescriptors = [
-            NSSortDescriptor( key: "name", ascending: true, selector: #selector( NSString.localizedCaseInsensitiveCompare( _: ) ) ),
-            NSSortDescriptor( key: "path", ascending: true )
-        ]
-        
+        self.updateSort()
+        self.addBrewColumns()
+        self.tableView.delegate = self
+        self.tableView.headerView = NSTableHeaderView()
+        self.addFeaturesLabel()
+
         self.window?.setContentBorderThickness( 0, for: .minY )
         
         self.dropView.onDrag = { _ in return true }
@@ -137,18 +204,43 @@ public class MainWindowController: NSWindowController
 
     private func updateArchFilter()
     {
-        if self.archFilter == 1
-        {
-            self.archFilteredApps.filterPredicate = NSPredicate( format: "isAppleSiliconReady=NO" )
-        }
-        else if self.archFilter == 2
-        {
-            self.archFilteredApps.filterPredicate = NSPredicate( format: "isAppleSiliconReady=YES" )
-        }
-        else
+        var subpredicates: [ NSPredicate ] = []
+
+        if self.showIntel32   { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "i386" ) ) }
+        if self.showIntel64   { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "x86_64" ) ) }
+        if self.showPowerPC   { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "ppc" ) ) }
+        if self.showAppleARM  { subpredicates.append( NSPredicate( format: "ANY architectures == %@", "arm64" ) ) }
+        if self.showUniversal { subpredicates.append( NSPredicate( format: "architectures.@count > 1" ) ) }
+        if self.showNonARM    { subpredicates.append( NSPredicate( format: "NOT ( ANY architectures BEGINSWITH %@ )", "arm" ) ) }
+
+        if subpredicates.isEmpty || subpredicates.count == 6
         {
             self.archFilteredApps.filterPredicate = nil
+
+            return
         }
+
+        self.archFilteredApps.filterPredicate = NSCompoundPredicate( orPredicateWithSubpredicates: subpredicates )
+    }
+
+    private func updateSort()
+    {
+        let key: String
+        let ascending: Bool
+
+        switch self.sortOption
+        {
+            case 1:  key = "name";         ascending = false
+            case 2:  key = "architecture"; ascending = true
+            case 3:  key = "architecture"; ascending = false
+            case 4:  key = "path";         ascending = true
+            case 5:  key = "path";         ascending = false
+            default: key = "name";         ascending = true
+        }
+
+        self.arrayController.sortDescriptors = [
+            NSSortDescriptor( key: key, ascending: ascending, selector: #selector( NSString.localizedCaseInsensitiveCompare( _: ) ) )
+        ]
     }
     
     public func stopLoading()
@@ -160,11 +252,17 @@ public class MainWindowController: NSWindowController
     {
         let reset =
         {
-            self.appCount   = 0
-            self.archFilter = 0
-            self.loading    = false
-            self.stop       = false
-            self.started    = false
+            self.appCount     = 0
+            self.showIntel32   = true
+            self.showIntel64   = true
+            self.showPowerPC   = true
+            self.showAppleARM  = true
+            self.showUniversal = true
+            self.showNonARM    = true
+            self.sortOption    = 0
+            self.loading      = false
+            self.stop         = false
+            self.started      = false
         }
         
         if self.loading
@@ -210,10 +308,15 @@ public class MainWindowController: NSWindowController
         DispatchQueue.global( qos: .userInitiated ).async
         {
             self.findApps()
-            
+
             DispatchQueue.main.async
             {
                 self.loading = false
+
+                if self.checkHomebrew
+                {
+                    self.runBrewLookup()
+                }
             }
         }
     }
@@ -223,13 +326,265 @@ public class MainWindowController: NSWindowController
         guard let app = self.arrayController.selectedObjects.first as? App else
         {
             NSSound.beep()
-            
+
             return
         }
-        
+
         app.showInFinder( sender )
     }
+
+    @IBAction public func exportCSV( _ sender: Any? )
+    {
+        let apps = self.arrayController.arrangedObjects as? [ App ] ?? []
+
+        guard !apps.isEmpty else { NSSound.beep(); return }
+
+        let panel = NSSavePanel()
+
+        panel.allowedFileTypes     = [ "csv" ]
+        panel.nameFieldStringValue = "Silicon Export"
+        panel.canCreateDirectories = true
+
+        guard let window = self.window else { return }
+
+        panel.beginSheetModal( for: window )
+        { response in
+            guard response == .OK, let url = panel.url else { return }
+
+            var header = "Name,Architecture,Version,Bundle ID,Path"
+            if self.checkHomebrew { header += ",Brew Formula,Brew Version" }
+            var lines = [ header ]
+
+            for app in apps
+            {
+                var fields =
+                [
+                    self.csvField( app.name ),
+                    self.csvField( app.architecture ),
+                    self.csvField( app.version ?? "" ),
+                    self.csvField( app.bundleID ?? "" ),
+                    self.csvField( app.path )
+                ]
+                if self.checkHomebrew
+                {
+                    fields.append( self.csvField( app.brewToken   ?? "" ) )
+                    fields.append( self.csvField( app.brewVersion ?? "" ) )
+                }
+                lines.append( fields.joined( separator: "," ) )
+            }
+
+            do
+            {
+                try lines.joined( separator: "\n" ).write( to: url, atomically: true, encoding: .utf8 )
+            }
+            catch
+            {
+                let alert = NSAlert( error: error )
+                alert.beginSheetModal( for: window, completionHandler: nil )
+            }
+        }
+    }
+
+    @IBAction public func exportHTML( _ sender: Any? )
+    {
+        let apps = self.arrayController.arrangedObjects as? [ App ] ?? []
+
+        guard !apps.isEmpty else { NSSound.beep(); return }
+
+        let panel = NSSavePanel()
+
+        panel.allowedFileTypes     = [ "html" ]
+        panel.nameFieldStringValue = "Silicon Export"
+        panel.canCreateDirectories = true
+
+        guard let window = self.window else { return }
+
+        panel.beginSheetModal( for: window )
+        { response in
+            guard response == .OK, let url = panel.url else { return }
+
+            let brewCols = self.checkHomebrew
+
+            let rows = apps.map
+            { app -> String in
+                let name     = self.htmlEscape( app.name )
+                let arch     = self.htmlEscape( app.architecture )
+                let version  = self.htmlEscape( app.version ?? "—" )
+                let bundleID = self.htmlEscape( app.bundleID ?? "—" )
+                let path     = self.htmlEscape( app.path )
+                var row      = "<tr><td>\(name)</td><td>\(arch)</td><td>\(version)</td><td>\(bundleID)</td><td class=\"path\">\(path)</td>"
+                if brewCols
+                {
+                    let token   = self.htmlEscape( app.brewToken   ?? "—" )
+                    let brewVer = self.htmlEscape( app.brewVersion ?? "—" )
+                    row += "<td>\(token)</td><td>\(brewVer)</td>"
+                }
+                return "        " + row + "</tr>"
+            }.joined( separator: "\n" )
+
+            let count  = apps.count
+            let plural = count == 1 ? "" : "s"
+
+            let html = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="utf-8">
+                <title>Silicon Scan Results</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 13px; margin: 24px; }
+                    h1 { font-size: 20px; margin: 0 0 4px; }
+                    p.sub { color: #666; margin: 0 0 16px; font-size: 12px; }
+                    table { border-collapse: collapse; width: 100%; }
+                    th { background: #f0f0f0; text-align: left; padding: 6px 10px; border: 1px solid #ccc; white-space: nowrap; }
+                    td { padding: 5px 10px; border: 1px solid #e0e0e0; vertical-align: top; }
+                    tr:nth-child(even) td { background: #fafafa; }
+                    .path { font-family: ui-monospace, monospace; font-size: 11px; color: #444; word-break: break-all; }
+                </style>
+            </head>
+            <body>
+                <h1>Silicon Scan Results</h1>
+                <p class="sub">\(count) application\(plural)</p>
+                <table>
+                    <thead>
+                        <tr><th>Name</th><th>Architecture</th><th>Version</th><th>Bundle ID</th><th>Path</th>\(brewCols ? "<th>Brew Formula</th><th>Brew Version</th>" : "")</tr>
+                    </thead>
+                    <tbody>
+            \(rows)
+                    </tbody>
+                </table>
+            </body>
+            </html>
+            """
+
+            do
+            {
+                try html.write( to: url, atomically: true, encoding: .utf8 )
+            }
+            catch
+            {
+                let alert = NSAlert( error: error )
+                alert.beginSheetModal( for: window, completionHandler: nil )
+            }
+        }
+    }
+
+    private func csvField( _ value: String ) -> String
+    {
+        "\"\( value.replacingOccurrences( of: "\"", with: "\"\"" ) )\""
+    }
+
+    private func htmlEscape( _ string: String ) -> String
+    {
+        string
+            .replacingOccurrences( of: "&",  with: "&amp;" )
+            .replacingOccurrences( of: "<",  with: "&lt;" )
+            .replacingOccurrences( of: ">",  with: "&gt;" )
+            .replacingOccurrences( of: "\"", with: "&quot;" )
+    }
     
+    // MARK: - Welcome screen
+
+    private func addFeaturesLabel()
+    {
+        let features =
+            "• Identifies app architecture: Apple Silicon, Universal,\n" +
+            "  Intel 64/32, and PowerPC\n\n" +
+            "• Filter by architecture type — including Universal\n" +
+            "  and Non-ARM views\n\n" +
+            "• Homebrew version lookup — see if a newer version\n" +
+            "  is available via Homebrew\n\n" +
+            "• Export app list to CSV or HTML\n\n" +
+            "• Drag and drop any .app to inspect its architecture"
+
+        let label          = NSTextField( wrappingLabelWithString: features )
+        label.font         = NSFont.systemFont( ofSize: NSFont.smallSystemFontSize + 1 )
+        label.textColor    = .secondaryLabelColor
+        label.alignment    = .left
+        label.translatesAutoresizingMaskIntoConstraints = false
+        self.dropView.addSubview( label )
+
+        NSLayoutConstraint.activate(
+        [
+            label.leadingAnchor.constraint( equalTo: self.dropView.leadingAnchor, constant: 40 ),
+            label.widthAnchor.constraint( equalToConstant: 280 ),
+            label.centerYAnchor.constraint( equalTo: self.dropView.centerYAnchor ),
+        ] )
+    }
+
+    // MARK: - Homebrew
+
+    private func addBrewColumns()
+    {
+        let nameCol = NSTableColumn( identifier: .init( "brewToken" ) )
+        nameCol.title    = "Brew Formula"
+        nameCol.minWidth = 80
+        nameCol.width    = 130
+        nameCol.maxWidth = 300
+        nameCol.isHidden = !self.checkHomebrew
+        self.tableView.addTableColumn( nameCol )
+        self.brewNameColumn = nameCol
+
+        let versionCol = NSTableColumn( identifier: .init( "brewVersion" ) )
+        versionCol.title    = "Brew Version"
+        versionCol.minWidth = 60
+        versionCol.width    = 100
+        versionCol.maxWidth = 200
+        versionCol.isHidden = !self.checkHomebrew
+        self.tableView.addTableColumn( versionCol )
+        self.brewVersionColumn = versionCol
+    }
+
+    private func updateBrewColumns()
+    {
+        self.brewNameColumn?.isHidden    = !self.checkHomebrew
+        self.brewVersionColumn?.isHidden = !self.checkHomebrew
+
+        if self.checkHomebrew
+        {
+            let apps = self.allApps.content as? [ App ] ?? []
+            if !apps.isEmpty { self.runBrewLookup() }
+        }
+        else
+        {
+            for app in ( self.allApps.content as? [ App ] ?? [] )
+            {
+                app.brewToken   = nil
+                app.brewVersion = nil
+            }
+            self.tableView?.reloadData()
+        }
+    }
+
+    private func runBrewLookup()
+    {
+        HomebrewService.shared.load
+        { [ weak self ] error in
+            guard let self = self, error == nil else { return }
+            self.applyBrewLookup()
+        }
+    }
+
+    func applyBrewLookup()
+    {
+        for app in ( self.allApps.content as? [ App ] ?? [] )
+        {
+            if let entry = HomebrewService.shared.lookup( bundleID: app.bundleID, appName: app.name )
+            {
+                app.brewToken   = entry.token
+                app.brewVersion = entry.version
+            }
+            else
+            {
+                app.brewToken   = nil
+                app.brewVersion = nil
+            }
+        }
+        self.tableView.reloadData()
+    }
+
+    // MARK: - Scan
+
     private func findApps()
     {
         if self.appsFolderOnly
@@ -249,42 +604,52 @@ public class MainWindowController: NSWindowController
     
     private func findApps( in directory: String )
     {
+        let blacklist = UserDefaults.standard.stringArray( forKey: "folderBlacklist" ) ?? []
+
         guard let enumerator = FileManager.default.enumerator( atPath: directory ) else
         {
             return
         }
-        
+
         var e = enumerator.nextObject()
-        
+
         while e != nil
         {
             if self.stop
             {
                 return
             }
-            
+
             autoreleasepool
             {
                 guard var path = e as? String else
                 {
                     e = enumerator.nextObject()
-                    
+
                     return
                 }
-                
+
                 path = ( directory as NSString ).appendingPathComponent( path )
-                
+
                 if path.hasPrefix( "/Volumes" )
                 {
                     e = enumerator.nextObject()
-                    
+
                     return
                 }
-                
+
+                if blacklist.contains( where: { path.hasPrefix( $0 ) } )
+                {
+                    enumerator.skipDescendents()
+                    e = enumerator.nextObject()
+
+                    return
+                }
+
                 if path.hasSuffix( ".app" ) == false
                 {
                     e = enumerator.nextObject()
-                    
+
                     return
                 }
                 
@@ -311,5 +676,60 @@ public class MainWindowController: NSWindowController
                 e = enumerator.nextObject()
             }
         }
+    }
+}
+
+// MARK: - NSTableViewDelegate
+
+extension MainWindowController: NSTableViewDelegate
+{
+    public func tableView( _ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int ) -> NSView?
+    {
+        guard let col = tableColumn else { return nil }
+
+        switch col.identifier.rawValue
+        {
+            case "brewToken", "brewVersion": break
+            default:
+                // Dequeue the prototype cell for the main column so bindings still work
+                return tableView.makeView( withIdentifier: col.identifier, owner: self )
+        }
+
+        let cellID = NSUserInterfaceItemIdentifier( "BrewTextCell" )
+
+        let cell: NSTableCellView
+
+        if let existing = tableView.makeView( withIdentifier: cellID, owner: self ) as? NSTableCellView
+        {
+            cell = existing
+        }
+        else
+        {
+            let newCell   = NSTableCellView()
+            let textField = NSTextField( labelWithString: "" )
+            textField.font                      = NSFont.systemFont( ofSize: NSFont.systemFontSize - 1 )
+            textField.lineBreakMode             = .byTruncatingMiddle
+            textField.translatesAutoresizingMaskIntoConstraints = false
+            newCell.addSubview( textField )
+            newCell.textField = textField
+            newCell.identifier = cellID
+            NSLayoutConstraint.activate(
+            [
+                textField.leadingAnchor.constraint( equalTo: newCell.leadingAnchor, constant: 4 ),
+                textField.trailingAnchor.constraint( equalTo: newCell.trailingAnchor, constant: -4 ),
+                textField.centerYAnchor.constraint( equalTo: newCell.centerYAnchor )
+            ] )
+            cell = newCell
+        }
+
+        let apps = self.arrayController.arrangedObjects as? [ App ] ?? []
+        guard row < apps.count else { return cell }
+        let app = apps[ row ]
+
+        cell.textField?.stringValue = col.identifier.rawValue == "brewToken"
+            ? ( app.brewToken   ?? "—" )
+            : ( app.brewVersion ?? "—" )
+
+        return cell
     }
 }

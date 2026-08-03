@@ -31,7 +31,11 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="VOq-y0-SEH"/>
-                            <menuItem title="Preferences…" keyEquivalent="," id="BOF-NM-1cW"/>
+                            <menuItem title="Preferences…" keyEquivalent="," id="BOF-NM-1cW">
+                                <connections>
+                                    <action selector="showPreferences:" target="Voe-Tx-rLC" id="prf-ac-shw"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Check for Updates..." id="d9E-Fi-myF">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
@@ -100,6 +104,19 @@
                             <menuItem title="Refresh" keyEquivalent="r" id="FbT-YU-ct9">
                                 <connections>
                                     <action selector="reload:" target="-1" id="Ld4-Cf-kua"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="exp-sp-r01"/>
+                            <menuItem title="Export to CSV..." id="exp-mn-csv">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="exportCSV:" target="-1" id="exp-ac-csv"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem title="Export to HTML..." id="exp-mn-htm">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="exportHTML:" target="-1" id="exp-ac-htm"/>
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="m54-Is-iLE"/>
@@ -677,13 +694,19 @@
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="Help" hidden="YES" id="wpr-3q-Mcd">
+                <menuItem title="Help" id="wpr-3q-Mcd">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Help" systemMenu="help" id="F2S-fz-NVQ">
                         <items>
                             <menuItem title="Silicon Help" keyEquivalent="?" id="FKE-Sm-Kum">
                                 <connections>
                                     <action selector="showHelp:" target="-1" id="y7X-2Q-9no"/>
+                                </connections>
+                            </menuItem>
+                            <menuItem isSeparatorItem="YES" id="hlp-sep-gh1"/>
+                            <menuItem title="GitHub Repository" id="hlp-gh-001">
+                                <connections>
+                                    <action selector="openGitHub:" target="-1" id="hlp-gh-act"/>
                                 </connections>
                             </menuItem>
                         </items>

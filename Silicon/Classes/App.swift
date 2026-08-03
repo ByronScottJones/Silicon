@@ -34,6 +34,8 @@ import Cocoa
     @objc public private( set ) var isAppleSiliconReady: Bool
     @objc public private( set ) var architecture:        String
     @objc public private( set ) var bundleID:            String?
+    @objc public            dynamic var brewToken:        String?
+    @objc public            dynamic var brewVersion:      String?
     
     public init?( path: String )
     {
@@ -59,7 +61,8 @@ import Cocoa
             return nil
         }
         
-        self.bundleID      = info.info[ "CFBundleIdentifier" ] as? String
+        self.bundleID      = info.info[ "CFBundleIdentifier" ]        as? String
+        self.version       = info.info[ "CFBundleShortVersionString" ] as? String
         self.name          = FileManager.default.displayName( atPath: path )
         self.path          = path
         self.icon          = NSWorkspace.shared.icon( forFile: path )

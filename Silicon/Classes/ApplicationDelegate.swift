@@ -27,9 +27,10 @@ import GitHubUpdates
 
 @main class ApplicationDelegate: NSObject, NSApplicationDelegate
 {
-    @objc public private( set ) dynamic var mainWindowController  = MainWindowController()
-    @objc public private( set ) dynamic var aboutWindowController = AboutWindowController()
-    
+    @objc public private( set ) dynamic var mainWindowController       = MainWindowController()
+    @objc public private( set ) dynamic var aboutWindowController      = AboutWindowController()
+    @objc public private( set ) dynamic var preferencesWindowController = PreferencesWindowController()
+
     @IBOutlet private var updater: GitHubUpdater!
     
     func applicationDidFinishLaunching( _ notification: Notification )
@@ -56,8 +57,18 @@ import GitHubUpdates
             self.aboutWindowController.window?.layoutIfNeeded()
             self.aboutWindowController.window?.center()
         }
-        
+
         self.aboutWindowController.window?.makeKeyAndOrderFront( nil )
+    }
+
+    @IBAction func showPreferences( _ sender: Any? )
+    {
+        if self.preferencesWindowController.window?.isVisible ?? false == false
+        {
+            self.preferencesWindowController.window?.center()
+        }
+
+        self.preferencesWindowController.window?.makeKeyAndOrderFront( nil )
     }
     
     @objc private func willTerminateNotification( _ notification: NSNotification )
@@ -81,5 +92,10 @@ import GitHubUpdates
     @IBAction public func checkForUpdates( _ sender: Any? )
     {
         self.updater.checkForUpdates( sender )
+    }
+
+    @IBAction public func openGitHub( _ sender: Any? )
+    {
+        NSWorkspace.shared.open( URL( string: "https://github.com/ByronScottJones/silicon" )! )
     }
 }
