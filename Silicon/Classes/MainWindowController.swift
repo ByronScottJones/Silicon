@@ -659,7 +659,9 @@ extension MainWindowController: NSTableViewDelegate
         switch col.identifier.rawValue
         {
             case "brewToken", "brewVersion": break
-            default: return nil
+            default:
+                // Dequeue the prototype cell for the main column so bindings still work
+                return tableView.makeView( withIdentifier: col.identifier, owner: self )
         }
 
         let cellID = NSUserInterfaceItemIdentifier( "BrewTextCell" )

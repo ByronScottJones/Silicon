@@ -150,7 +150,7 @@ DQ
                                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                     <tableColumns>
-                                                        <tableColumn width="788" minWidth="40" maxWidth="10000" id="n69-Ki-Sqw">
+                                                        <tableColumn identifier="mainCell" width="788" minWidth="40" maxWidth="10000" id="n69-Ki-Sqw">
                                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
                                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -162,7 +162,7 @@ DQ
                                                             </textFieldCell>
                                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                             <prototypeCellViews>
-                                                                <tableCellView id="kWl-yP-zvy">
+                                                                <tableCellView identifier="mainCell" id="kWl-yP-zvy">
                                                                     <rect key="frame" x="8" y="0.0" width="783" height="48"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                     <subviews>
