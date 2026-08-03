@@ -55,12 +55,48 @@ public class MainWindowController: NSWindowController
         }
     }
 
-    @objc public private( set ) dynamic var archFilter = UserDefaults.standard.integer( forKey: "archFilter" )
+    @objc public private( set ) dynamic var showIntel32 = UserDefaults.standard.value( forKey: "showIntel32" ) == nil ? true : UserDefaults.standard.bool( forKey: "showIntel32" )
     {
         didSet
         {
             self.updateArchFilter()
-            UserDefaults.standard.set( self.archFilter, forKey: "archFilter" )
+            UserDefaults.standard.set( self.showIntel32, forKey: "showIntel32" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showIntel64 = UserDefaults.standard.value( forKey: "showIntel64" ) == nil ? true : UserDefaults.standard.bool( forKey: "showIntel64" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showIntel64, forKey: "showIntel64" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showPowerPC = UserDefaults.standard.value( forKey: "showPowerPC" ) == nil ? true : UserDefaults.standard.bool( forKey: "showPowerPC" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showPowerPC, forKey: "showPowerPC" )
+        }
+    }
+
+    @objc public private( set ) dynamic var showAppleARM = UserDefaults.standard.value( forKey: "showAppleARM" ) == nil ? true : UserDefaults.standard.bool( forKey: "showAppleARM" )
+    {
+        didSet
+        {
+            self.updateArchFilter()
+            UserDefaults.standard.set( self.showAppleARM, forKey: "showAppleARM" )
+        }
+    }
+
+    @objc public private( set ) dynamic var sortOption = UserDefaults.standard.integer( forKey: "sortOption" )
+    {
+        didSet
+        {
+            self.updateSort()
+            UserDefaults.standard.set( self.sortOption, forKey: "sortOption" )
         }
     }
     
@@ -78,11 +114,7 @@ public class MainWindowController: NSWindowController
     {
         super.windowDidLoad()
         self.updateArchFilter()
-        
-        self.arrayController.sortDescriptors = [
-            NSSortDescriptor( key: "name", ascending: true, selector: #selector( NSString.localizedCaseInsensitiveCompare( _: ) ) ),
-            NSSortDescriptor( key: "path", ascending: true )
-        ]
+        self.updateSort()
         
         self.window?.setContentBorderThickness( 0, for: .minY )
         
@@ -137,18 +169,43 @@ public class MainWindowController: NSWindowController
 
     private func updateArchFilter()
     {
-        if self.archFilter == 1
-        {
-            self.archFilteredApps.filterPredicate = NSPredicate( format: "isAppleSiliconReady=NO" )
-        }
-        else if self.archFilter == 2
-        {
-            self.archFilteredApps.filterPredicate = NSPredicate( format: "isAppleSiliconReady=YES" )
-        }
-        else
+        var checked: [ String ] = []
+
+        if self.showIntel32  { checked.append( "i386" ) }
+        if self.showIntel64  { checked.append( "x86_64" ) }
+        if self.showPowerPC  { checked.append( "ppc" ) }
+        if self.showAppleARM { checked.append( "arm64" ) }
+
+        if checked.isEmpty || checked.count == 4
         {
             self.archFilteredApps.filterPredicate = nil
+
+            return
         }
+
+        let subpredicates = checked.map { NSPredicate( format: "ANY architectures == %@", $0 ) }
+
+        self.archFilteredApps.filterPredicate = NSCompoundPredicate( orPredicateWithSubpredicates: subpredicates )
+    }
+
+    private func updateSort()
+    {
+        let key: String
+        let ascending: Bool
+
+        switch self.sortOption
+        {
+            case 1:  key = "name";         ascending = false
+            case 2:  key = "architecture"; ascending = true
+            case 3:  key = "architecture"; ascending = false
+            case 4:  key = "path";         ascending = true
+            case 5:  key = "path";         ascending = false
+            default: key = "name";         ascending = true
+        }
+
+        self.arrayController.sortDescriptors = [
+            NSSortDescriptor( key: key, ascending: ascending, selector: #selector( NSString.localizedCaseInsensitiveCompare( _: ) ) )
+        ]
     }
     
     public func stopLoading()
@@ -160,11 +217,15 @@ public class MainWindowController: NSWindowController
     {
         let reset =
         {
-            self.appCount   = 0
-            self.archFilter = 0
-            self.loading    = false
-            self.stop       = false
-            self.started    = false
+            self.appCount     = 0
+            self.showIntel32  = true
+            self.showIntel64  = true
+            self.showPowerPC  = true
+            self.showAppleARM = true
+            self.sortOption   = 0
+            self.loading      = false
+            self.stop         = false
+            self.started      = false
         }
         
         if self.loading

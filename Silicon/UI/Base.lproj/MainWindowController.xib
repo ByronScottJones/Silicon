@@ -19,9 +19,9 @@
         <window title="Silicon" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" frameAutosaveName="" animationBehavior="default" titlebarAppearsTransparent="YES" id="4ss-uf-DBv">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" fullSizeContentView="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="239" width="800" height="528"/>
+            <rect key="contentRect" x="196" y="239" width="1000" height="528"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1175"/>
-            <value key="minSize" type="size" width="800" height="528"/>
+            <value key="minSize" type="size" width="1000" height="528"/>
             <view key="contentView" id="S4c-Zh-clU">
                 <rect key="frame" x="0.0" y="0.0" width="800" height="528"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -354,23 +354,66 @@ DQ
                                             <binding destination="-2" name="animate" keyPath="self.loading" id="jwW-SC-hZE"/>
                                         </connections>
                                     </progressIndicator>
-                                    <popUpButton wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Cye-qz-z7R">
-                                        <rect key="frame" x="200" y="5" width="263" height="25"/>
-                                        <popUpButtonCell key="cell" type="push" title="Show All Apps" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="QoR-x6-4UR" id="JUp-NH-6jS">
+                                    <popUpButton wantsLayer="YES" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="srt-pp-Btn">
+                                        <rect key="frame" x="200" y="5" width="160" height="25"/>
+                                        <popUpButtonCell key="cell" type="push" title="Name ↑" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="srt-nm-Asc" id="srt-pp-Cel">
                                             <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
                                             <font key="font" metaFont="menu"/>
-                                            <menu key="menu" id="Fcm-dI-NNv">
+                                            <menu key="menu" id="srt-pp-Mnu">
                                                 <items>
-                                                    <menuItem title="Show All Apps" state="on" id="QoR-x6-4UR"/>
-                                                    <menuItem title="Show Intel-Only Apps" id="ux4-9b-ut4"/>
-                                                    <menuItem title="Show Apple SIlicon Compatible Apps" id="uJw-yo-gLb"/>
+                                                    <menuItem title="Name ↑" tag="0" state="on" id="srt-nm-Asc"/>
+                                                    <menuItem title="Name ↓" tag="1" id="srt-nm-Dsc"/>
+                                                    <menuItem title="Architecture ↑" tag="2" id="srt-ar-Asc"/>
+                                                    <menuItem title="Architecture ↓" tag="3" id="srt-ar-Dsc"/>
+                                                    <menuItem title="Path ↑" tag="4" id="srt-ph-Asc"/>
+                                                    <menuItem title="Path ↓" tag="5" id="srt-ph-Dsc"/>
                                                 </items>
                                             </menu>
                                         </popUpButtonCell>
                                         <connections>
-                                            <binding destination="-2" name="selectedIndex" keyPath="self.archFilter" id="ROS-cK-nch"/>
+                                            <binding destination="-2" name="selectedIndex" keyPath="self.sortOption" id="srt-pp-Bnd"/>
                                         </connections>
                                     </popUpButton>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="i32-cb-Btn">
+                                        <rect key="frame" x="368" y="10" width="72" height="18"/>
+                                        <buttonCell key="cell" type="check" title="Intel 32" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="i32-cb-Cel">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.showIntel32" id="i32-cb-Bnd"/>
+                                        </connections>
+                                    </button>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="i64-cb-Btn">
+                                        <rect key="frame" x="448" y="10" width="72" height="18"/>
+                                        <buttonCell key="cell" type="check" title="Intel 64" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="i64-cb-Cel">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.showIntel64" id="i64-cb-Bnd"/>
+                                        </connections>
+                                    </button>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="ppc-cb-Btn">
+                                        <rect key="frame" x="528" y="10" width="72" height="18"/>
+                                        <buttonCell key="cell" type="check" title="PowerPC" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="ppc-cb-Cel">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.showPowerPC" id="ppc-cb-Bnd"/>
+                                        </connections>
+                                    </button>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="arm-cb-Btn">
+                                        <rect key="frame" x="608" y="10" width="82" height="18"/>
+                                        <buttonCell key="cell" type="check" title="Apple ARM" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="arm-cb-Cel">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.showAppleARM" id="arm-cb-Bnd"/>
+                                        </connections>
+                                    </button>
                                     <searchField wantsLayer="YES" verticalHuggingPriority="750" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2P9-ac-fjj">
                                         <rect key="frame" x="467" y="8" width="325" height="22"/>
                                         <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="tJe-P9-fC8">
@@ -398,12 +441,10 @@ DQ
                                     <constraint firstItem="EXT-aP-E37" firstAttribute="centerY" secondItem="Og5-pw-YO3" secondAttribute="centerY" id="Nl6-AL-6Za"/>
                                     <constraint firstItem="lhn-dQ-baP" firstAttribute="top" secondItem="gOG-g2-H7Y" secondAttribute="bottom" id="OPX-PH-wP3"/>
                                     <constraint firstAttribute="trailing" secondItem="gOG-g2-H7Y" secondAttribute="trailing" id="S3D-3Q-Yke"/>
-                                    <constraint firstItem="2P9-ac-fjj" firstAttribute="leading" secondItem="Cye-qz-z7R" secondAttribute="trailing" constant="8" symbolic="YES" id="Sqb-wh-42b"/>
                                     <constraint firstItem="gOG-g2-H7Y" firstAttribute="leading" secondItem="1Uf-5D-8gz" secondAttribute="leading" id="TBG-Zr-omt"/>
                                     <constraint firstAttribute="trailing" secondItem="2P9-ac-fjj" secondAttribute="trailing" constant="8" id="VkA-Pl-ZcP"/>
                                     <constraint firstAttribute="trailing" secondItem="lhn-dQ-baP" secondAttribute="trailing" id="ZYh-HG-Hce"/>
                                     <constraint firstItem="y1x-cB-ONP" firstAttribute="top" secondItem="lhn-dQ-baP" secondAttribute="bottom" id="dVT-ES-8Qf"/>
-                                    <constraint firstItem="Cye-qz-z7R" firstAttribute="leading" secondItem="EXT-aP-E37" secondAttribute="trailing" constant="8" symbolic="YES" id="fZa-jS-FFH"/>
                                     <constraint firstItem="EXT-aP-E37" firstAttribute="leading" secondItem="Og5-pw-YO3" secondAttribute="trailing" constant="8" symbolic="YES" id="gwv-oQ-tlT"/>
                                     <constraint firstItem="PDk-2u-0qa" firstAttribute="centerX" secondItem="lhn-dQ-baP" secondAttribute="centerX" id="jG1-ov-Q8K"/>
                                     <constraint firstItem="PDk-2u-0qa" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="1Uf-5D-8gz" secondAttribute="leading" constant="20" symbolic="YES" id="kUM-h4-2VY"/>
@@ -411,10 +452,19 @@ DQ
                                     <constraint firstItem="hdw-9V-Hlw" firstAttribute="leading" secondItem="1Uf-5D-8gz" secondAttribute="leading" constant="8" id="nEF-L3-vb9"/>
                                     <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="PDk-2u-0qa" secondAttribute="trailing" constant="20" symbolic="YES" id="q7P-7V-Jzs"/>
                                     <constraint firstItem="2P9-ac-fjj" firstAttribute="top" secondItem="y1x-cB-ONP" secondAttribute="bottom" constant="8" symbolic="YES" id="qQz-38-vJv"/>
-                                    <constraint firstItem="Cye-qz-z7R" firstAttribute="centerY" secondItem="EXT-aP-E37" secondAttribute="centerY" id="qXP-CR-Tcs"/>
                                     <constraint firstItem="lhn-dQ-baP" firstAttribute="leading" secondItem="1Uf-5D-8gz" secondAttribute="leading" id="sMY-TN-g5o"/>
-                                    <constraint firstItem="Cye-qz-z7R" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="uL8-FB-s6U"/>
                                     <constraint firstItem="Og5-pw-YO3" firstAttribute="leading" secondItem="hdw-9V-Hlw" secondAttribute="trailing" constant="10" id="vb2-eh-oLK"/>
+                                    <constraint firstItem="srt-pp-Btn" firstAttribute="leading" secondItem="EXT-aP-E37" secondAttribute="trailing" constant="8" symbolic="YES" id="c00-st-rt"/>
+                                    <constraint firstItem="i32-cb-Btn" firstAttribute="leading" secondItem="srt-pp-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c01-i3-ld"/>
+                                    <constraint firstItem="i64-cb-Btn" firstAttribute="leading" secondItem="i32-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c02-i6-ld"/>
+                                    <constraint firstItem="ppc-cb-Btn" firstAttribute="leading" secondItem="i64-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c03-pp-ld"/>
+                                    <constraint firstItem="arm-cb-Btn" firstAttribute="leading" secondItem="ppc-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c04-ar-ld"/>
+                                    <constraint firstItem="2P9-ac-fjj" firstAttribute="leading" secondItem="arm-cb-Btn" secondAttribute="trailing" constant="8" symbolic="YES" id="c05-sf-ld"/>
+                                    <constraint firstItem="srt-pp-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c06-st-cy"/>
+                                    <constraint firstItem="i32-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c07-i3-cy"/>
+                                    <constraint firstItem="i64-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c08-i6-cy"/>
+                                    <constraint firstItem="ppc-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c09-pp-cy"/>
+                                    <constraint firstItem="arm-cb-Btn" firstAttribute="centerY" secondItem="2P9-ac-fjj" secondAttribute="centerY" id="c10-ar-cy"/>
                                 </constraints>
                                 <connections>
                                     <binding destination="-2" name="hidden" keyPath="self.started" id="cQi-ue-O7a">
