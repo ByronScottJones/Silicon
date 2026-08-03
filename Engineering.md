@@ -102,7 +102,12 @@ Persisted `UserDefaults` keys:
 | `appsFolderOnly` | Bool | `true` | Scan only `/Applications` |
 | `recurseIntoApps` | Bool | `false` | Descend into `.app` subdirectories |
 | `excludeAppleApps` | Bool | `false` | Skip `com.apple.*` bundles |
-| `archFilter` | Int | `0` | 0=all, 1=Intel-only, 2=Apple Silicon |
+| `showIntel32` | Bool | `true` | Show Intel 32-bit apps in results |
+| `showIntel64` | Bool | `true` | Show Intel 64-bit apps in results |
+| `showPowerPC` | Bool | `true` | Show PowerPC apps in results |
+| `showAppleARM` | Bool | `true` | Show Apple ARM apps in results |
+| `sortOption` | Int | `0` | 0=Name↑ 1=Name↓ 2=Arch↑ 3=Arch↓ 4=Path↑ 5=Path↓ |
+| `folderBlacklist` | [String] | `[]` | Paths excluded from all scans |
 
 ### Cocoa Bindings Pattern
 
@@ -163,6 +168,20 @@ For non-Bool types that may not have a stored value yet (like the initial `appsF
 
 ---
 
+## Features
+
+### Architecture Filter Checkboxes (v1.1)
+Four independent checkboxes in the bottom bar — Intel 32, Intel 64, PowerPC, Apple ARM — replace the old single-selection filter popup. Each maps to a raw arch string (`i386`, `x86_64`, `ppc`, `arm64`) checked against `App.architectures` via `NSCompoundPredicate`. All checked or all unchecked shows everything.
+
+### Sort Options (v1.1)
+A "Sort By" popup in the bottom bar with six options: Name/Architecture/Path each ascending and descending. Selection drives `arrayController.sortDescriptors` via `updateSort()`. Persisted in `UserDefaults.sortOption`.
+
+### Export (v1.1)
+File > Export to CSV… / Export to HTML… exports the currently visible (filtered + sorted) app list from `arrayController.arrangedObjects`. Destination chosen via `NSSavePanel`. HTML is a self-contained document with inline styles; CSV includes header row with proper quoting.
+
+### Folder Blacklist / Preferences (v1.1)
+Silicon > Preferences (⌘,) opens `PreferencesWindowController` — a programmatic (no XIB) window with a table of excluded folder paths. Paths are stored as `[String]` in `UserDefaults` under `"folderBlacklist"`. During `findApps(in:)`, any path that has a blacklisted prefix causes `enumerator.skipDescendents()` so entire directory trees are skipped efficiently.
+
 ## Known Limitations
 
 - No sandbox entitlements — the app must be distributed outside the Mac App Store (or with a special exception) to freely enumerate all installed applications.
@@ -170,3 +189,4 @@ For non-Bool types that may not have a stored value yet (like the initial `appsF
 - Architecture detection is based solely on the primary executable; helper tools or frameworks within a bundle are not inspected.
 - The `ppc64` CPU type is not explicitly handled and would fall through as `<unknown>`.
 - There are no unit or integration tests.
+- `allowedFileTypes` (deprecated in macOS 12) is used in export panels for 10.13 compatibility; migrate to `allowedContentTypes` when the deployment target is raised to 11+.
