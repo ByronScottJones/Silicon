@@ -39,7 +39,52 @@ Installation
 
 Download the latest release from the [Releases page](https://github.com/byronjones-elsevier/Silicon/releases) and move `Silicon.app` to your `/Applications` folder.
 
-Or build from source — see [Engineering.md](Engineering.md).
+Or build from source with Xcode and the local Makefile targets below.
+
+Building From Source
+--------------------
+
+Prerequisites:
+
+- Xcode with command line tools installed
+- Git submodules initialized
+
+Fetch the required submodules first:
+
+```sh
+make submodules
+```
+
+Common local build commands:
+
+```sh
+make build        # Build Release for the host/default architecture
+make app-intel    # Build and stage build/dist/x86_64/Silicon.app
+make app-arm      # Build and stage build/dist/arm64/Silicon.app
+make dmg-intel    # Create build/dist/Silicon-<version>-x86_64.dmg
+make dmg-arm      # Create build/dist/Silicon-<version>-arm64.dmg
+make dist         # Create both Intel and Apple Silicon DMGs
+make clean        # Remove build output
+```
+
+Local builds are unsigned by default so they work without a developer
+certificate:
+
+```sh
+make dist SIGNING=unsigned
+```
+
+Other signing modes:
+
+```sh
+make dist SIGNING=adhoc
+make dist SIGNING=automatic
+```
+
+Apple Silicon builds use `MACOSX_DEPLOYMENT_TARGET=11.0` by default because
+macOS arm64 apps require Big Sur or later. Output is written under
+`build/dist/`. Additional build details are in [BUILDING.md](BUILDING.md) and
+[Engineering.md](Engineering.md).
 
 Changelog
 ---------
