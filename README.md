@@ -10,9 +10,9 @@ Silicon
 About
 -----
 
-Identify the binary architecture of every app installed on your Mac:
+Identify the binary architecture of every app and supported plugin installed on your Mac:
 
-Silicon scans `.app` bundles, parses their Mach-O executables, and classifies each application as Apple Silicon (ARM), Universal, Intel 64, Intel 32, or PowerPC — or any combination. It optionally cross-references Homebrew to show the latest available version alongside each installed app.
+Silicon scans `.app` bundles, parses their Mach-O executables, and classifies each application as Apple Silicon (ARM), Universal, Intel 64, Intel 32, or PowerPC -- or any combination. It can also scan macOS audio plugin folders for Mach-O binaries and optionally cross-reference Homebrew to show the latest available version alongside each installed app.
 
 ![All binaries](Assets/Silicon_AllBinaries.png "All binaries")
 
@@ -31,7 +31,8 @@ Features
 - **Flexible filtering** — independent checkboxes for each architecture, plus Universal and Non-ARM filters
 - **Homebrew version lookup** — compares installed apps against Homebrew cask and formula data (24-hour cache)
 - **Export** — CSV and HTML exports with architecture, version, bundle ID, path, and optional Homebrew columns
-- **Folder blacklist** — exclude directories from scans via Preferences
+- **Special Folders** — include extra scan roots or exclude directories from scans via Preferences
+- **Audio plugin scanning** — optionally scans `/Library/Audio/Plug-Ins/` and `~/Library/Audio/Plug-Ins/` for Mach-O binaries
 - **Sort options** — by name, architecture, or path (ascending/descending)
 
 Installation
@@ -88,6 +89,11 @@ macOS arm64 apps require Big Sur or later. Output is written under
 
 Changelog
 ---------
+
+### Unreleased
+- Replaced the Folder Blacklist preferences table with Special Folders that can be marked Included or Excluded
+- Added a **Scan for Audio Plugins** preference that includes `/Library/Audio/Plug-Ins/` and `~/Library/Audio/Plug-Ins/`
+- Audio plugin folders scan every file recursively and report Mach-O binaries as application-style results
 
 ### v1.1.0
 - Added Universal and Non-ARM architecture filter checkboxes

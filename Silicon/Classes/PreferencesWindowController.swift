@@ -26,14 +26,22 @@ import Cocoa
 
 public class PreferencesWindowController: NSWindowController, NSTableViewDataSource
 {
-    private var tableView: NSTableView!
+    private static let specialFoldersKey  = "specialFolders"
+    private static let folderPathKey      = "path"
+    private static let folderModeKey      = "mode"
+    private static let includedFolderMode = "included"
+    private static let excludedFolderMode = "excluded"
+    private static let audioPluginsKey    = "scanAudioPlugins"
+    private static let audioPluginFolders = [ "/Library/Audio/Plug-Ins/", "~/Library/Audio/Plug-Ins/" ]
 
+    private var tableView: NSTableView!
+    private var audioPluginsCheckbox: NSButton!
     private var refreshButton: NSButton!
 
     public init()
     {
         let window = NSWindow(
-            contentRect: NSRect( x: 0, y: 0, width: 480, height: 460 ),
+            contentRect: NSRect( x: 0, y: 0, width: 520, height: 520 ),
             styleMask:   [ .titled, .closable ],
             backing:     .buffered,
             defer:       false
@@ -43,37 +51,46 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
 
         super.init( window: window )
 
+        self.migrateFolderBlacklist()
+        self.syncAudioPluginFolders( enabled: UserDefaults.standard.bool( forKey: PreferencesWindowController.audioPluginsKey ) )
         self.buildUI( in: window.contentView! )
     }
 
     required public init?( coder: NSCoder ) { fatalError( "init(coder:) not supported" ) }
 
-    private var blacklistedFolders: [ String ]
+    private var specialFolders: [ [ String: String ] ]
     {
-        get { UserDefaults.standard.stringArray( forKey: "folderBlacklist" ) ?? [] }
-        set { UserDefaults.standard.set( newValue, forKey: "folderBlacklist" ) }
+        get { UserDefaults.standard.array( forKey: PreferencesWindowController.specialFoldersKey ) as? [ [ String: String ] ] ?? [] }
+        set { UserDefaults.standard.set( newValue, forKey: PreferencesWindowController.specialFoldersKey ) }
     }
 
     private func buildUI( in contentView: NSView )
     {
-        let titleLabel        = NSTextField( labelWithString: "Folder Blacklist" )
+        let titleLabel        = NSTextField( labelWithString: "Special Folders" )
         titleLabel.font       = NSFont.boldSystemFont( ofSize: NSFont.systemFontSize )
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview( titleLabel )
 
-        let infoLabel           = NSTextField( labelWithString: "Folders listed here are excluded from all scans." )
+        let infoLabel           = NSTextField( labelWithString: "Included folders are scanned in addition to the normal scan roots. Excluded folders are skipped." )
         infoLabel.font          = NSFont.systemFont( ofSize: NSFont.smallSystemFontSize )
         infoLabel.textColor     = .secondaryLabelColor
+        infoLabel.lineBreakMode = .byWordWrapping
         infoLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview( infoLabel )
 
-        let column              = NSTableColumn( identifier: NSUserInterfaceItemIdentifier( "path" ) )
-        column.title            = "Excluded Folder"
-        column.resizingMask     = [ .autoresizingMask ]
-        column.width            = 440
+        let modeColumn              = NSTableColumn( identifier: NSUserInterfaceItemIdentifier( "mode" ) )
+        modeColumn.title            = "Mode"
+        modeColumn.resizingMask     = []
+        modeColumn.width            = 84
+
+        let pathColumn              = NSTableColumn( identifier: NSUserInterfaceItemIdentifier( "path" ) )
+        pathColumn.title            = "Folder"
+        pathColumn.resizingMask     = [ .autoresizingMask ]
+        pathColumn.width            = 388
 
         let table               = NSTableView()
-        table.addTableColumn( column )
+        table.addTableColumn( modeColumn )
+        table.addTableColumn( pathColumn )
         table.dataSource        = self
         table.columnAutoresizingStyle = .lastColumnOnlyAutoresizingStyle
         table.rowHeight         = 20
@@ -105,7 +122,29 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         removeButton.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview( removeButton )
 
-        // Homebrew section
+        let includeButton       = NSButton( title: "Mark Included", target: self, action: #selector( markIncluded( _: ) ) )
+        includeButton.bezelStyle = .rounded
+        includeButton.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( includeButton )
+
+        let excludeButton       = NSButton( title: "Mark Excluded", target: self, action: #selector( markExcluded( _: ) ) )
+        excludeButton.bezelStyle = .rounded
+        excludeButton.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( excludeButton )
+
+        let audioCheckbox       = NSButton( checkboxWithTitle: "Scan for Audio Plugins", target: self, action: #selector( audioPluginsToggled( _: ) ) )
+        audioCheckbox.state     = UserDefaults.standard.bool( forKey: PreferencesWindowController.audioPluginsKey ) ? .on : .off
+        audioCheckbox.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( audioCheckbox )
+        self.audioPluginsCheckbox = audioCheckbox
+
+        let audioInfoLabel           = NSTextField( labelWithString: "Adds /Library/Audio/Plug-Ins/ and ~/Library/Audio/Plug-Ins/ as included folders. Every Mach-O binary file inside them is reported." )
+        audioInfoLabel.font          = NSFont.systemFont( ofSize: NSFont.smallSystemFontSize )
+        audioInfoLabel.textColor     = .secondaryLabelColor
+        audioInfoLabel.lineBreakMode = .byWordWrapping
+        audioInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview( audioInfoLabel )
+
         let brewSep             = NSBox()
         brewSep.boxType         = .separator
         brewSep.translatesAutoresizingMaskIntoConstraints = false
@@ -158,7 +197,7 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
             listSep.bottomAnchor.constraint( equalTo: addButton.topAnchor, constant: -4 ),
 
             addButton.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
-            addButton.bottomAnchor.constraint( equalTo: brewSep.topAnchor, constant: -12 ),
+            addButton.bottomAnchor.constraint( equalTo: audioCheckbox.topAnchor, constant: -10 ),
             addButton.widthAnchor.constraint( equalToConstant: 22 ),
             addButton.heightAnchor.constraint( equalToConstant: 22 ),
 
@@ -166,6 +205,20 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
             removeButton.centerYAnchor.constraint( equalTo: addButton.centerYAnchor ),
             removeButton.widthAnchor.constraint( equalToConstant: 22 ),
             removeButton.heightAnchor.constraint( equalToConstant: 22 ),
+
+            includeButton.leadingAnchor.constraint( equalTo: removeButton.trailingAnchor, constant: 10 ),
+            includeButton.centerYAnchor.constraint( equalTo: addButton.centerYAnchor ),
+
+            excludeButton.leadingAnchor.constraint( equalTo: includeButton.trailingAnchor, constant: 6 ),
+            excludeButton.centerYAnchor.constraint( equalTo: addButton.centerYAnchor ),
+
+            audioCheckbox.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
+            audioCheckbox.trailingAnchor.constraint( equalTo: contentView.trailingAnchor, constant: -16 ),
+            audioCheckbox.bottomAnchor.constraint( equalTo: audioInfoLabel.topAnchor, constant: -4 ),
+
+            audioInfoLabel.leadingAnchor.constraint( equalTo: contentView.leadingAnchor, constant: 16 ),
+            audioInfoLabel.trailingAnchor.constraint( equalTo: contentView.trailingAnchor, constant: -16 ),
+            audioInfoLabel.bottomAnchor.constraint( equalTo: brewSep.topAnchor, constant: -12 ),
 
             brewSep.leadingAnchor.constraint( equalTo: contentView.leadingAnchor ),
             brewSep.trailingAnchor.constraint( equalTo: contentView.trailingAnchor ),
@@ -190,12 +243,20 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
 
     public func numberOfRows( in tableView: NSTableView ) -> Int
     {
-        self.blacklistedFolders.count
+        self.specialFolders.count
     }
 
     public func tableView( _ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int ) -> Any?
     {
-        self.blacklistedFolders[ row ]
+        let folder = self.specialFolders[ row ]
+
+        switch tableColumn?.identifier.rawValue
+        {
+            case "mode":
+                return folder[ PreferencesWindowController.folderModeKey ] == PreferencesWindowController.includedFolderMode ? "Included" : "Excluded"
+            default:
+                return folder[ PreferencesWindowController.folderPathKey ] ?? ""
+        }
     }
 
     @objc private func addFolder( _ sender: Any? )
@@ -205,7 +266,7 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         panel.canChooseDirectories    = true
         panel.canChooseFiles          = false
         panel.allowsMultipleSelection = false
-        panel.prompt                  = "Add to Blacklist"
+        panel.prompt                  = "Add Special Folder"
 
         guard let window = self.window else { return }
 
@@ -213,13 +274,7 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         { response in
             guard response == .OK, let url = panel.url else { return }
 
-            let path    = url.path
-            var folders = self.blacklistedFolders
-
-            guard !folders.contains( path ) else { return }
-
-            folders.append( path )
-            self.blacklistedFolders = folders
+            self.addSpecialFolder( path: url.path, mode: PreferencesWindowController.excludedFolderMode )
             self.tableView.reloadData()
         }
     }
@@ -234,10 +289,141 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
             return
         }
 
-        var folders = self.blacklistedFolders
+        var folders = self.specialFolders
         folders.remove( at: row )
-        self.blacklistedFolders = folders
+        self.specialFolders = folders
+        self.syncAudioCheckboxState()
         self.tableView.reloadData()
+    }
+
+    @objc private func markIncluded( _ sender: Any? )
+    {
+        self.setModeForSelectedFolder( PreferencesWindowController.includedFolderMode )
+    }
+
+    @objc private func markExcluded( _ sender: Any? )
+    {
+        self.setModeForSelectedFolder( PreferencesWindowController.excludedFolderMode )
+    }
+
+    private func setModeForSelectedFolder( _ mode: String )
+    {
+        let row = self.tableView.selectedRow
+
+        guard row >= 0 else
+        {
+            NSSound.beep()
+            return
+        }
+
+        var folders = self.specialFolders
+        folders[ row ][ PreferencesWindowController.folderModeKey ] = mode
+        self.specialFolders = folders
+        self.syncAudioCheckboxState()
+        self.tableView.reloadData()
+    }
+
+    @objc private func audioPluginsToggled( _ sender: NSButton )
+    {
+        let enabled = sender.state == .on
+
+        UserDefaults.standard.set( enabled, forKey: PreferencesWindowController.audioPluginsKey )
+        self.syncAudioPluginFolders( enabled: enabled )
+        self.tableView.reloadData()
+    }
+
+    private func syncAudioPluginFolders( enabled: Bool )
+    {
+        if enabled
+        {
+            for path in PreferencesWindowController.audioPluginFolders
+            {
+                self.addSpecialFolder( path: path, mode: PreferencesWindowController.includedFolderMode )
+            }
+        }
+        else
+        {
+            self.specialFolders = self.specialFolders.filter
+            {
+                guard let path = $0[ PreferencesWindowController.folderPathKey ] else { return true }
+
+                return self.isAudioPluginFolder( path ) == false
+            }
+        }
+    }
+
+    private func syncAudioCheckboxState()
+    {
+        let enabled = PreferencesWindowController.audioPluginFolders.allSatisfy
+        { audioPath in
+            self.specialFolders.contains
+            { folder in
+                guard let path = folder[ PreferencesWindowController.folderPathKey ],
+                      folder[ PreferencesWindowController.folderModeKey ] == PreferencesWindowController.includedFolderMode
+                else
+                {
+                    return false
+                }
+
+                return self.normalizedPath( path ) == self.normalizedPath( audioPath )
+            }
+        }
+
+        UserDefaults.standard.set( enabled, forKey: PreferencesWindowController.audioPluginsKey )
+        self.audioPluginsCheckbox?.state = enabled ? .on : .off
+    }
+
+    private func addSpecialFolder( path: String, mode: String )
+    {
+        let normalized = self.normalizedPath( path )
+        var folders    = self.specialFolders
+
+        if let index = folders.firstIndex( where: { self.normalizedPath( $0[ PreferencesWindowController.folderPathKey ] ?? "" ) == normalized } )
+        {
+            folders[ index ][ PreferencesWindowController.folderPathKey ] = path
+            folders[ index ][ PreferencesWindowController.folderModeKey ] = mode
+        }
+        else
+        {
+            folders.append(
+            [
+                PreferencesWindowController.folderPathKey: path,
+                PreferencesWindowController.folderModeKey: mode
+            ] )
+        }
+
+        self.specialFolders = folders
+    }
+
+    private func migrateFolderBlacklist()
+    {
+        guard UserDefaults.standard.object( forKey: PreferencesWindowController.specialFoldersKey ) == nil else
+        {
+            return
+        }
+
+        self.specialFolders = ( UserDefaults.standard.stringArray( forKey: "folderBlacklist" ) ?? [] ).map
+        {
+            [
+                PreferencesWindowController.folderPathKey: $0,
+                PreferencesWindowController.folderModeKey: PreferencesWindowController.excludedFolderMode
+            ]
+        }
+    }
+
+    private func isAudioPluginFolder( _ path: String ) -> Bool
+    {
+        let normalized = self.normalizedPath( path )
+
+        return PreferencesWindowController.audioPluginFolders.contains
+        {
+            self.normalizedPath( $0 ) == normalized
+        }
+    }
+
+    private func normalizedPath( _ path: String ) -> String
+    {
+        ( ( path as NSString ).expandingTildeInPath as NSString ).standardizingPath
     }
 
     @objc private func homebrewToggled( _ sender: NSButton )
@@ -256,7 +442,7 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
     @objc private func refreshBrewCache( _ sender: Any? )
     {
         self.refreshButton.isEnabled = false
-        self.refreshButton.title     = "Refreshing…"
+        self.refreshButton.title     = "Refreshing..."
 
         HomebrewService.shared.forceRefresh
         { [ weak self ] _ in

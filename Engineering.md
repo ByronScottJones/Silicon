@@ -2,7 +2,7 @@
 
 ## Overview
 
-Silicon is a native macOS utility that identifies the binary architecture of installed applications. It scans `.app` bundles, parses their Mach-O executables, and classifies each one as Apple Silicon, Universal, Intel 64, Intel 32, PowerPC, or combinations thereof.
+Silicon is a native macOS utility that identifies the binary architecture of installed applications and supported plugin binaries. It scans `.app` bundles, parses their Mach-O executables, and classifies each one as Apple Silicon, Universal, Intel 64, Intel 32, PowerPC, or combinations thereof. When audio plugin scanning is enabled, it also scans the standard macOS audio plugin folders and reports standalone Mach-O binaries found there.
 
 - **Language:** Swift 5
 - **UI Framework:** AppKit (XIB-based, Cocoa Bindings)
@@ -19,7 +19,7 @@ Silicon is a native macOS utility that identifies the binary architecture of ins
 Silicon/
 ├── Silicon/
 │   ├── Classes/                  # All Swift source files
-│   │   ├── App.swift             # Core model — represents one .app bundle
+│   │   ├── App.swift             # Core model — represents one .app bundle or Mach-O binary
 │   │   ├── AppInfo.swift         # Reads Info.plist; resolves executable path
 │   │   ├── MachOFile.swift       # Parses Mach-O binaries; extracts architectures
 │   │   ├── BinaryStream.swift    # Low-level byte reader (used by MachOFile)
@@ -50,8 +50,10 @@ Silicon/
 ```
 FileManager.enumerator
     → findApps(in:)                      [background queue]
-        → App(path:)
+        → App(path:)                     for .app bundles
             → AppInfo(path:)             reads Info.plist
+            → MachOFile(path:)           parses binary
+        → App(binaryPath:)               for included audio plugin binaries
             → MachOFile(path:)           parses binary
         → allApps NSArrayController      [main queue]
             → archFilteredApps NSArrayController   (predicate filter)
@@ -62,17 +64,17 @@ FileManager.enumerator
 ### Key Classes
 
 #### `App` — Model (`App.swift`)
-The central model object. Initialized with a `.app` bundle path; returns `nil` if the path is not a valid app or the binary cannot be parsed.
+The central model object. `App(path:)` initializes from a `.app` bundle path and returns `nil` if the bundle metadata or executable cannot be parsed. `App(binaryPath:)` initializes from a direct Mach-O binary path, which is used for audio plugin folders where plugin executables may live inside bundle-style directories or nested support folders.
 
 Key properties (all `@objc dynamic` for Cocoa Bindings):
 - `name: String` — display name from `FileManager.displayName`
-- `path: String` — absolute path to the `.app` bundle
+- `path: String` — absolute path to the `.app` bundle or direct binary
 - `architectures: [String]` — raw arch strings from the binary (`"arm64"`, `"x86_64"`, `"i386"`, `"ppc"`)
 - `architecture: String` — human-readable label (`"Universal"`, `"Intel 64"`, etc.)
 - `isAppleSiliconReady: Bool` — true if `architectures` contains `"arm64"`
-- `bundleID: String?` — `CFBundleIdentifier`
-- `version: String?` — `CFBundleShortVersionString`
-- `icon: NSImage?` — app icon via `NSWorkspace`
+- `bundleID: String?` — `CFBundleIdentifier`; `nil` for direct binary results
+- `version: String?` — `CFBundleShortVersionString`; `nil` for direct binary results
+- `icon: NSImage?` — app icon via `NSWorkspace`; `nil` for direct binary results
 
 #### `MachOFile` — Binary Parser (`MachOFile.swift`)
 Parses the raw bytes of a Mach-O executable. Handles all five magic numbers:
@@ -107,7 +109,9 @@ Persisted `UserDefaults` keys:
 | `showPowerPC` | Bool | `true` | Show PowerPC apps in results |
 | `showAppleARM` | Bool | `true` | Show Apple ARM apps in results |
 | `sortOption` | Int | `0` | 0=Name↑ 1=Name↓ 2=Arch↑ 3=Arch↓ 4=Path↑ 5=Path↓ |
-| `folderBlacklist` | [String] | `[]` | Paths excluded from all scans |
+| `specialFolders` | [[String:String]] | `[]` | Extra folder entries with `path` and `mode` (`included` or `excluded`) |
+| `scanAudioPlugins` | Bool | `false` | Adds the standard audio plugin folders as included special folders |
+| `folderBlacklist` | [String] | `[]` | Legacy excluded paths; migrated to `specialFolders` and still honored for compatibility |
 
 ### Cocoa Bindings Pattern
 
@@ -198,8 +202,10 @@ A "Sort By" popup in the bottom bar with six options: Name/Architecture/Path eac
 ### Export (v1.1)
 File > Export to CSV… / Export to HTML… exports the currently visible (filtered + sorted) app list from `arrayController.arrangedObjects`. Destination chosen via `NSSavePanel`. HTML is a self-contained document with inline styles; CSV includes header row with proper quoting.
 
-### Folder Blacklist / Preferences (v1.1)
-Silicon > Preferences (⌘,) opens `PreferencesWindowController` — a programmatic (no XIB) window with a table of excluded folder paths. Paths are stored as `[String]` in `UserDefaults` under `"folderBlacklist"`. During `findApps(in:)`, any path that has a blacklisted prefix causes `enumerator.skipDescendents()` so entire directory trees are skipped efficiently.
+### Special Folders / Audio Plugins (Unreleased)
+Silicon > Preferences (⌘,) opens `PreferencesWindowController` -- a programmatic (no XIB) window with a Special Folders table. Each row stores a folder `path` and `mode` in `UserDefaults.specialFolders`; `included` rows add extra scan roots, while `excluded` rows prune matching directory trees during enumeration. The legacy `folderBlacklist` key is migrated into excluded Special Folders and remains honored by the scanner for compatibility.
+
+The **Scan for Audio Plugins** checkbox persists `UserDefaults.scanAudioPlugins`. When enabled, it adds `/Library/Audio/Plug-Ins/` and `~/Library/Audio/Plug-Ins/` as included Special Folders. Those roots are scanned recursively as files instead of app bundles: every non-directory path is passed to `App(binaryPath:)`, and any parseable Mach-O binary is added to the application list.
 
 ### Homebrew Lookup (v1.1)
 `HomebrewService` fetches `https://formulae.brew.sh/api/cask.json` and `https://formulae.brew.sh/api/formula.json` in parallel on a background queue using `URLSession` + `DispatchGroup`. Results are cached under `~/.Silicon/homebrew_cache/` with a 24-hour TTL. Lookup priority: bundle ID → app display name → formula name. Bundle IDs are extracted from `artifacts[].uninstall[].quit` in the cask JSON; app names from `artifacts[].app[]` which can be either plain strings or `{"target": "Name.app"}` dicts.
@@ -226,7 +232,7 @@ The Help menu (`MainMenu.xib`) was previously `hidden="YES"`. It is now visible 
 
 - No sandbox entitlements — the app must be distributed outside the Mac App Store (or with a special exception) to freely enumerate all installed applications.
 - Submodule `GitHubUpdates` must be checked out for the build to succeed.
-- Architecture detection is based solely on the primary executable; helper tools or frameworks within a bundle are not inspected.
+- Normal app-bundle architecture detection is based solely on the primary executable; helper tools or frameworks within a bundle are not inspected unless they are direct Mach-O files found during audio plugin folder scanning.
 - The `ppc64` CPU type is not explicitly handled and would fall through as `<unknown>`.
 - There are no unit or integration tests.
 - `allowedFileTypes` (deprecated in macOS 12) is used in export panels for 10.13 compatibility; migrate to `allowedContentTypes` when the deployment target is raised to 11+.

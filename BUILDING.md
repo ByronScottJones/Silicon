@@ -56,3 +56,10 @@ make dist SIGNING=automatic
 ```
 
 Output is written under `build/dist/`.
+
+## Testing Local Changes
+
+Use `make build` before review to validate the current source against the
+Release configuration. The built app is written to
+`build/DerivedData/Build/Products/Release/Silicon.app`; architecture-specific
+apps and DMGs are produced by the `app-*` and `dmg-*` targets above.
