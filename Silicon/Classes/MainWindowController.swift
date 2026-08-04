@@ -26,6 +26,13 @@ import Cocoa
 
 public class MainWindowController: NSWindowController
 {
+    private static let specialFoldersKey  = "specialFolders"
+    private static let folderPathKey      = "path"
+    private static let folderModeKey      = "mode"
+    private static let includedFolderMode = "included"
+    private static let excludedFolderMode = "excluded"
+    private static let audioPluginFolders = [ "/Library/Audio/Plug-Ins/", "~/Library/Audio/Plug-Ins/" ]
+
     @objc public private( set ) dynamic var started  = false
     @objc public private( set ) dynamic var loading  = false
     @objc private               dynamic var stop     = false
@@ -587,26 +594,34 @@ public class MainWindowController: NSWindowController
 
     private func findApps()
     {
+        let includedFolders = self.specialFolderPaths( mode: MainWindowController.includedFolderMode )
+
         if self.appsFolderOnly
         {
             let paths = NSSearchPathForDirectoriesInDomains( .applicationDirectory, .allDomainsMask, true )
-            
+
             for path in paths
             {
-                self.findApps( in: path )
+                self.findApps( in: path, scanAllFiles: false )
             }
         }
         else
         {
-            self.findApps( in: "/" )
+            self.findApps( in: "/", scanAllFiles: false )
+        }
+
+        for folder in includedFolders
+        {
+            self.findApps( in: folder, scanAllFiles: self.isAudioPluginFolder( folder ) )
         }
     }
-    
-    private func findApps( in directory: String )
-    {
-        let blacklist = UserDefaults.standard.stringArray( forKey: "folderBlacklist" ) ?? []
 
-        guard let enumerator = FileManager.default.enumerator( atPath: directory ) else
+    private func findApps( in directory: String, scanAllFiles: Bool )
+    {
+        let excludedFolders = self.excludedFolderPaths()
+        let scanRoot        = self.normalizedPath( directory )
+
+        guard let enumerator = FileManager.default.enumerator( atPath: scanRoot ) else
         {
             return
         }
@@ -629,7 +644,7 @@ public class MainWindowController: NSWindowController
                     return
                 }
 
-                path = ( directory as NSString ).appendingPathComponent( path )
+                path = ( scanRoot as NSString ).appendingPathComponent( path )
 
                 if path.hasPrefix( "/Volumes" )
                 {
@@ -638,9 +653,30 @@ public class MainWindowController: NSWindowController
                     return
                 }
 
-                if blacklist.contains( where: { path.hasPrefix( $0 ) } )
+                if excludedFolders.contains( where: { self.path( path, isIn: $0 ) } )
                 {
                     enumerator.skipDescendents()
+                    e = enumerator.nextObject()
+
+                    return
+                }
+
+                if scanAllFiles
+                {
+                    var isDir = ObjCBool( booleanLiteral: false )
+
+                    guard FileManager.default.fileExists( atPath: path, isDirectory: &isDir ), isDir.boolValue == false else
+                    {
+                        e = enumerator.nextObject()
+
+                        return
+                    }
+
+                    if let app = App( binaryPath: path )
+                    {
+                        self.addScannedApp( app )
+                    }
+
                     e = enumerator.nextObject()
 
                     return
@@ -652,30 +688,92 @@ public class MainWindowController: NSWindowController
 
                     return
                 }
-                
+
                 if self.recurseIntoApps == false
                 {
                     enumerator.skipDescendents()
                 }
-                
+
                 if let app = App( path: path )
                 {
-                    DispatchQueue.main.async
-                    {
-                        if self.excludeAppleApps && ( app.bundleID?.starts( with: "com.apple." ) ?? false  )
-                        {
-                            return
-                        }
-                        
-                        self.allApps.addObject( app )
-                        
-                        self.appCount += 1
-                    }
+                    self.addScannedApp( app )
                 }
-                
+
                 e = enumerator.nextObject()
             }
         }
+    }
+
+    private func addScannedApp( _ app: App )
+    {
+        DispatchQueue.main.async
+        {
+            if self.excludeAppleApps && ( app.bundleID?.starts( with: "com.apple." ) ?? false )
+            {
+                return
+            }
+
+            self.allApps.addObject( app )
+
+            self.appCount += 1
+        }
+    }
+
+    private func specialFolderPaths( mode: String ) -> [ String ]
+    {
+        let folders = UserDefaults.standard.array( forKey: MainWindowController.specialFoldersKey ) as? [ [ String: String ] ] ?? []
+
+        return folders
+            .filter { $0[ MainWindowController.folderModeKey ] == mode }
+            .compactMap { $0[ MainWindowController.folderPathKey ] }
+            .map { self.normalizedPath( $0 ) }
+    }
+
+    private func excludedFolderPaths() -> [ String ]
+    {
+        var paths = self.specialFolderPaths( mode: MainWindowController.excludedFolderMode )
+
+        for path in UserDefaults.standard.stringArray( forKey: "folderBlacklist" ) ?? []
+        {
+            let normalized = self.normalizedPath( path )
+
+            if paths.contains( normalized ) == false
+            {
+                paths.append( normalized )
+            }
+        }
+
+        return paths
+    }
+
+    private func isAudioPluginFolder( _ path: String ) -> Bool
+    {
+        let normalized = self.normalizedPath( path )
+
+        return MainWindowController.audioPluginFolders.contains
+        {
+            self.normalizedPath( $0 ) == normalized
+        }
+    }
+
+    private func normalizedPath( _ path: String ) -> String
+    {
+        ( ( path as NSString ).expandingTildeInPath as NSString ).standardizingPath
+    }
+
+    private func path( _ path: String, isIn folder: String ) -> Bool
+    {
+        let normalizedPath   = self.normalizedPath( path )
+        let normalizedFolder = self.normalizedPath( folder ).trimmingCharacters( in: CharacterSet( charactersIn: "/" ) )
+
+        if normalizedFolder.isEmpty
+        {
+            return normalizedPath == "/"
+        }
+
+        let folderPath = "/" + normalizedFolder
+
+        return normalizedPath == folderPath || normalizedPath.hasPrefix( folderPath + "/" )
     }
 }
 

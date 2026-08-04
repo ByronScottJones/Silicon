@@ -6,7 +6,7 @@ This document describes how AI coding agents should understand and work within t
 
 ## What This App Does
 
-Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports each application's CPU architecture(s). It can also cross-reference Homebrew to show the latest available version for each installed app. The central questions it answers are: "Does this app run natively on Apple Silicon?" and "Is there a newer version available via Homebrew?"
+Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports each application's CPU architecture(s). It can also scan the standard macOS audio plugin folders for standalone Mach-O binaries and cross-reference Homebrew to show the latest available version for each installed app. The central questions it answers are: "Does this app run natively on Apple Silicon?" and "Is there a newer version available via Homebrew?"
 
 ---
 
@@ -36,7 +36,7 @@ Silicon scans macOS `.app` bundles, reads their Mach-O binaries, and reports eac
 | Homebrew cask/formula fetch and lookup | `Silicon/Classes/HomebrewService.swift` |
 | Main window UI layout | `Silicon/UI/Base.lproj/MainWindowController.xib` |
 | App entry point | `Silicon/Classes/ApplicationDelegate.swift` |
-| Preferences window (blacklist + Homebrew toggle) | `Silicon/Classes/PreferencesWindowController.swift` |
+| Preferences window (Special Folders + audio plugins + Homebrew toggle) | `Silicon/Classes/PreferencesWindowController.swift` |
 | Drag-and-drop support | `Silicon/Classes/DropView.swift` |
 | Persisted settings keys | Properties in `MainWindowController.swift` with `UserDefaults` in `didSet` |
 | CI workflow | `.github/workflows/ci.yaml` |
@@ -77,14 +77,17 @@ When adding a new filter dimension, apply it as a `filterPredicate` on `archFilt
 
 ## Scanning Architecture
 
-`findApps()` runs on a background GCD queue (`userInitiated`). It uses `FileManager.enumerator` to walk directories. For each `.app` path found, it initializes an `App` object (which parses the binary synchronously on the background thread), then dispatches the result to the main queue to add it to `allApps`.
+`findApps()` runs on a background GCD queue (`userInitiated`). It uses `FileManager.enumerator` to walk directories. For each `.app` path found during normal app scans, it initializes `App(path:)` (which parses the binary synchronously on the background thread), then dispatches the result to the main queue to add it to `allApps`. Included audio plugin roots are scanned as raw file trees instead: every non-directory file is passed to `App(binaryPath:)`, and parseable Mach-O binaries are added as application-style rows.
 
 Key skip conditions already in place:
 - Paths under `/Volumes` are skipped
 - Non-`.app` paths are skipped
 - If `recurseIntoApps` is false, `enumerator.skipDescendents()` is called after finding a `.app`
 - `com.apple.*` bundles are optionally excluded at the main-queue insertion point
-- Paths matching any entry in `folderBlacklist` cause `enumerator.skipDescendents()`
+- Paths matching excluded Special Folders cause `enumerator.skipDescendents()`
+- Legacy paths in `folderBlacklist` are still honored as excluded folders
+- Included Special Folders are scanned after the normal scan roots
+- `/Library/Audio/Plug-Ins/` and `~/Library/Audio/Plug-Ins/` are managed by the **Scan for Audio Plugins** preference and scan all files recursively
 
 When adding new skip conditions, add them in the background-thread enumeration body, before the `App(path:)` initialization, to avoid wasting work.
 
@@ -129,6 +132,8 @@ Dynamically-added columns (Brew Formula, Brew Version) create their cells progra
    ```
 2. For settings that need to be writable from an external class via Cocoa Bindings, omit `private(set)` — KVC treats `private(set)` as read-only from other modules.
 3. For array/dictionary types, use `UserDefaults.standard.array(forKey:)` / `stringArray(forKey:)` and encode with `set(_:forKey:)`.
+
+Special Folders are persisted under `specialFolders` as dictionaries containing `path` and `mode`, where `mode` is either `included` or `excluded`. The `scanAudioPlugins` Bool controls whether the standard audio plugin folders are present as included Special Folders.
 
 ---
 

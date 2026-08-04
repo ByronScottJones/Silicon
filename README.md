@@ -10,9 +10,9 @@ Silicon
 About
 -----
 
-Identify the binary architecture of every app installed on your Mac:
+Identify the binary architecture of every app and supported plugin installed on your Mac:
 
-Silicon scans `.app` bundles, parses their Mach-O executables, and classifies each application as Apple Silicon (ARM), Universal, Intel 64, Intel 32, or PowerPC — or any combination. It optionally cross-references Homebrew to show the latest available version alongside each installed app.
+Silicon scans `.app` bundles, parses their Mach-O executables, and classifies each application as Apple Silicon (ARM), Universal, Intel 64, Intel 32, or PowerPC -- or any combination. It can also scan macOS audio plugin folders for Mach-O binaries and optionally cross-reference Homebrew to show the latest available version alongside each installed app.
 
 ![All binaries](Assets/Silicon_AllBinaries.png "All binaries")
 
@@ -31,7 +31,8 @@ Features
 - **Flexible filtering** — independent checkboxes for each architecture, plus Universal and Non-ARM filters
 - **Homebrew version lookup** — compares installed apps against Homebrew cask and formula data (24-hour cache)
 - **Export** — CSV and HTML exports with architecture, version, bundle ID, path, and optional Homebrew columns
-- **Folder blacklist** — exclude directories from scans via Preferences
+- **Special Folders** — include extra scan roots or exclude directories from scans via Preferences
+- **Audio plugin scanning** — optionally scans `/Library/Audio/Plug-Ins/` and `~/Library/Audio/Plug-Ins/` for Mach-O binaries
 - **Sort options** — by name, architecture, or path (ascending/descending)
 
 Installation
@@ -39,10 +40,60 @@ Installation
 
 Download the latest release from the [Releases page](https://github.com/byronjones-elsevier/Silicon/releases) and move `Silicon.app` to your `/Applications` folder.
 
-Or build from source — see [Engineering.md](Engineering.md).
+Or build from source with Xcode and the local Makefile targets below.
+
+Building From Source
+--------------------
+
+Prerequisites:
+
+- Xcode with command line tools installed
+- Git submodules initialized
+
+Fetch the required submodules first:
+
+```sh
+make submodules
+```
+
+Common local build commands:
+
+```sh
+make build        # Build Release for the host/default architecture
+make app-intel    # Build and stage build/dist/x86_64/Silicon.app
+make app-arm      # Build and stage build/dist/arm64/Silicon.app
+make dmg-intel    # Create build/dist/Silicon-<version>-x86_64.dmg
+make dmg-arm      # Create build/dist/Silicon-<version>-arm64.dmg
+make dist         # Create both Intel and Apple Silicon DMGs
+make clean        # Remove build output
+```
+
+Local builds are unsigned by default so they work without a developer
+certificate:
+
+```sh
+make dist SIGNING=unsigned
+```
+
+Other signing modes:
+
+```sh
+make dist SIGNING=adhoc
+make dist SIGNING=automatic
+```
+
+Apple Silicon builds use `MACOSX_DEPLOYMENT_TARGET=11.0` by default because
+macOS arm64 apps require Big Sur or later. Output is written under
+`build/dist/`. Additional build details are in [BUILDING.md](BUILDING.md) and
+[Engineering.md](Engineering.md).
 
 Changelog
 ---------
+
+### Unreleased
+- Replaced the Folder Blacklist preferences table with Special Folders that can be marked Included or Excluded
+- Added a **Scan for Audio Plugins** preference that includes `/Library/Audio/Plug-Ins/` and `~/Library/Audio/Plug-Ins/`
+- Audio plugin folders scan every file recursively and report Mach-O binaries as application-style results
 
 ### v1.1.0
 - Added Universal and Non-ARM architecture filter checkboxes

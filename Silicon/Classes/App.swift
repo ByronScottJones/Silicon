@@ -61,74 +61,92 @@ import Cocoa
             return nil
         }
         
-        self.bundleID      = info.info[ "CFBundleIdentifier" ]        as? String
-        self.version       = info.info[ "CFBundleShortVersionString" ] as? String
-        self.name          = FileManager.default.displayName( atPath: path )
-        self.path          = path
-        self.icon          = NSWorkspace.shared.icon( forFile: path )
-        self.architectures = macho.architectures
+        let architectureInfo = App.describe( architectures: macho.architectures, isIOS: info.kind == .iOS )
         
-        if macho.architectures.count == 1
+        self.bundleID              = info.info[ "CFBundleIdentifier" ]        as? String
+        self.version               = info.info[ "CFBundleShortVersionString" ] as? String
+        self.name                  = FileManager.default.displayName( atPath: path )
+        self.path                  = path
+        self.icon                  = NSWorkspace.shared.icon( forFile: path )
+        self.architectures         = macho.architectures
+        self.isAppleSiliconReady   = architectureInfo.isAppleSiliconReady
+        self.architecture          = architectureInfo.architecture
+    }
+
+    public init?( binaryPath path: String )
+    {
+        var isDir = ObjCBool( booleanLiteral: false )
+
+        if FileManager.default.fileExists( atPath: path, isDirectory: &isDir ) == false || isDir.boolValue
         {
-            if macho.architectures.contains( "arm64" )
+            return nil
+        }
+
+        guard let macho = MachOFile( path: path ) else
+        {
+            return nil
+        }
+
+        let architectureInfo = App.describe( architectures: macho.architectures, isIOS: false )
+
+        self.bundleID              = nil
+        self.version               = nil
+        self.name                  = FileManager.default.displayName( atPath: path )
+        self.path                  = path
+        self.icon                  = nil
+        self.architectures         = macho.architectures
+        self.isAppleSiliconReady   = architectureInfo.isAppleSiliconReady
+        self.architecture          = architectureInfo.architecture
+    }
+
+    private static func describe( architectures: [ String ], isIOS: Bool ) -> ( isAppleSiliconReady: Bool, architecture: String )
+    {
+        if architectures.count == 1
+        {
+            if architectures.contains( "arm64" )
             {
-                self.isAppleSiliconReady = true
-                self.architecture        = info.kind == .iOS ? "Apple (iOS)" : "Apple"
+                return ( true, isIOS ? "Apple (iOS)" : "Apple" )
             }
-            else if( macho.architectures.contains( "x86_64" ) )
+            else if architectures.contains( "x86_64" )
             {
-                self.isAppleSiliconReady = false
-                self.architecture        = "Intel 64"
+                return ( false, "Intel 64" )
             }
-            else if macho.architectures.contains( "i386" )
+            else if architectures.contains( "i386" )
             {
-                self.isAppleSiliconReady = false
-                self.architecture        = "Intel 32"
+                return ( false, "Intel 32" )
             }
-            else if macho.architectures.contains( "ppc" )
+            else if architectures.contains( "ppc" )
             {
-                self.isAppleSiliconReady = false
-                self.architecture        = "PowerPC"
+                return ( false, "PowerPC" )
             }
             else
             {
-                self.isAppleSiliconReady = false
-                self.architecture        = "Unknown"
+                return ( false, "Unknown" )
             }
         }
-        else
+
+        if architectures.contains( "arm64" )
         {
-            if macho.architectures.contains( "arm64" )
-            {
-                self.isAppleSiliconReady = true
-                self.architecture        = info.kind == .iOS ? "Universal (iOS)" : "Universal"
-            }
-            else if macho.architectures.contains( "ppc" ) && macho.architectures.contains( "i386" ) && macho.architectures.contains( "x86_64" )
-            {
-                self.isAppleSiliconReady = false
-                self.architecture        = "PowerPC/Intel 32/64"
-            }
-            else if macho.architectures.contains( "ppc" ) && macho.architectures.contains( "x86_64" )
-            {
-                self.isAppleSiliconReady = false
-                self.architecture        = "PowerPC/Intel 64"
-            }
-            else if macho.architectures.contains( "ppc" ) && macho.architectures.contains( "i386" )
-            {
-                self.isAppleSiliconReady = false
-                self.architecture        = "PowerPC/Intel 32"
-            }
-            else if macho.architectures.contains( "i386" ) && macho.architectures.contains( "x86_64" )
-            {
-                self.isAppleSiliconReady = false
-                self.architecture        = "Intel 32/64"
-            }
-            else
-            {
-                self.isAppleSiliconReady = false
-                self.architecture        = "Unknown"
-            }
+            return ( true, isIOS ? "Universal (iOS)" : "Universal" )
         }
+        else if architectures.contains( "ppc" ) && architectures.contains( "i386" ) && architectures.contains( "x86_64" )
+        {
+            return ( false, "PowerPC/Intel 32/64" )
+        }
+        else if architectures.contains( "ppc" ) && architectures.contains( "x86_64" )
+        {
+            return ( false, "PowerPC/Intel 64" )
+        }
+        else if architectures.contains( "ppc" ) && architectures.contains( "i386" )
+        {
+            return ( false, "PowerPC/Intel 32" )
+        }
+        else if architectures.contains( "i386" ) && architectures.contains( "x86_64" )
+        {
+            return ( false, "Intel 32/64" )
+        }
+
+        return ( false, "Unknown" )
     }
     
     @IBAction public func showInFinder( _ sender: Any? )
