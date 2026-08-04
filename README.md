@@ -125,9 +125,19 @@ Repository Infos
     Fork Owner:     Byron Scott Jones
     Fork Github:    ByronScottJones/silicon
 
-# AI Disclaimer
-This application was updated with the assistance of Claude.ai
-The code was reviewed and tested by Byron Scott Jones, a real actual human developer with nearly 50 years of experience. If you do not like that I used AI, tough.
+# Disclaimers
+
+## App Notarization
+
+This application is open source, and not notarized at this time. I will not be submitting it to the app store. If the original developer wishes to pull in my updates and release it in the app store, they are welcome to do so.
+
+## Privacy Policy
+
+ I have seen no evidence in the code that the original application transmits data to third parties. My additions pull two JSON files from HomeBrew, but I do not transmit information to them, or any other entities. All processing stays on your local system.
+
+## AI
+
+I am a software engineer with nearly 50 years of experience. I now use AI tools to assist me with development. For this project, I have used Claude.ai and Anthropic GPT 5.5. After each feature update, I reviewed the application to ensure that it was working as I intended. As someone with Frontotemporal Dementia, AI tools are literally saving my career, and allowing me to continue working longer in a field that I love. If you don't like AI, you are welcome to not use my fork of this application. If you do not like that I use AI, tough.
 
 In the words of Bender:
 
