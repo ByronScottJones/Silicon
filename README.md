@@ -141,4 +141,4 @@ I am a software engineer with nearly 50 years of experience. I now use AI tools 
 
 In the words of Bender:
 
-![Bender](Assets/futurama-bender.gif "Bender - Bite My Shiny Metal Ass")
+![Bender](Assets/Byron-Bender-Bite-thumb.jpg "Bender - Bite My Shiny Metal Ass")
