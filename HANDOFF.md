@@ -17,7 +17,7 @@ and the specification is [ENGINEERING.md](ENGINEERING.md).
 
 ## 2. Resume here
 
-Start with H-6 (formatter and linter):
+Start with H-8, then H-9:
 
 ```bash
 make submodules
@@ -32,13 +32,15 @@ None.
 
 | ID | Item | Reason | Acceptance | Owner | Blocked by |
 | --- | --- | --- | --- | --- | --- |
-| H-4 | Add `os.Logger` output for scan and Homebrew failures | `swift.md` standard; failures are silent today | Section 8 updated | Byron Scott Jones | none |
-| H-6 | Add formatter and linter configuration and `.swift-version`, then run `swift format lint --strict` in CI | `swift.md` standard | `swift format lint --strict` passes in CI | Byron Scott Jones | none |
 | H-8 | Remove the duplicate `xcconfig` entry (path `xcconfig`) in `.gitmodules`; the agent sandbox cannot write that file | Duplicate submodule entry | `git submodule status` clean | Byron Scott Jones | none |
 | H-9 | Bring `README.md`, `BUILDING.md`, `SECURITY.md`, `AI_NOTICE.md`, and `CODE_OF_CONDUCT.md` to the Markdown lint rules and drop them from the ignore list in `.markdownlint-cli2.jsonc` | Inherited style does not pass | Lint passes with no ignores for these files | Byron Scott Jones | none |
 
 ## 5. Decisions needed
 
+- Format the code base with `swift-format`? Options: keep the upstream style
+  (current, decision D-4) or reformat everything once, then enforce
+  `swift format lint --strict` in CI. Recommendation: keep the style unless the
+  fork stops tracking upstream.
 - Which Git identity is the maintainer's? History shows both `Byron Scott Jones`
   and `ByronJones-Elsevier`. Recommendation: record the second as an alias of the
   first only after the owner confirms it.

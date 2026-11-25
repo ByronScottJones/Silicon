@@ -24,6 +24,7 @@
  ******************************************************************************/
 
 import Foundation
+import os
 
 /// Downloads, caches, and queries Homebrew cask and formula metadata.
 ///
@@ -38,6 +39,8 @@ public final class HomebrewService: @unchecked Sendable
         public let token:   String
         public let version: String
     }
+
+    private static let log = Logger( subsystem: Bundle.main.bundleIdentifier ?? "com.DigiDNA.Silicon", category: "homebrew" )
 
     private let lock = NSLock()
     private var casksByBundleID: [ String: Entry ] = [:]
@@ -71,16 +74,25 @@ public final class HomebrewService: @unchecked Sendable
     ///   parallel and the first failure is rethrown.
     public func load() async throws
     {
-        try FileManager.default.createDirectory( at: self.cacheDir, withIntermediateDirectories: true )
+        do
+        {
+            try FileManager.default.createDirectory( at: self.cacheDir, withIntermediateDirectories: true )
 
-        async let caskData    = self.fetchOrLoad( remote: HomebrewService.caskFeedURL,    cache: self.caskCacheURL )
-        async let formulaData = self.fetchOrLoad( remote: HomebrewService.formulaFeedURL, cache: self.formulaCacheURL )
+            async let caskData    = self.fetchOrLoad( remote: HomebrewService.caskFeedURL,    cache: self.caskCacheURL )
+            async let formulaData = self.fetchOrLoad( remote: HomebrewService.formulaFeedURL, cache: self.formulaCacheURL )
 
-        let casks    = try await caskData
-        let formulae = try await formulaData
+            let casks    = try await caskData
+            let formulae = try await formulaData
 
-        self.parseCasks( data: casks )
-        self.parseFormulae( data: formulae )
+            self.parseCasks( data: casks )
+            self.parseFormulae( data: formulae )
+        }
+        catch
+        {
+            HomebrewService.log.error( "Homebrew load failed: \( error.localizedDescription, privacy: .public )" )
+
+            throw error
+        }
     }
 
     /// Delete cached files and re-fetch.
@@ -129,6 +141,10 @@ public final class HomebrewService: @unchecked Sendable
 
         guard ( response as? HTTPURLResponse )?.statusCode == 200 else
         {
+            let host = remote.host ?? "Homebrew"
+
+            HomebrewService.log.error( "Unexpected response from \( host, privacy: .public )" )
+
             throw URLError( .badServerResponse )
         }
 
@@ -140,7 +156,12 @@ public final class HomebrewService: @unchecked Sendable
     private func parseCasks( data: Data )
     {
         guard let casks = try? JSONSerialization.jsonObject( with: data ) as? [ [ String: Any ] ]
-        else { return }
+        else
+        {
+            HomebrewService.log.error( "Cask JSON could not be parsed" )
+
+            return
+        }
 
         var byBundleID: [ String: Entry ] = [:]
         var byAppName:  [ String: Entry ] = [:]
@@ -226,7 +247,12 @@ public final class HomebrewService: @unchecked Sendable
     private func parseFormulae( data: Data )
     {
         guard let formulae = try? JSONSerialization.jsonObject( with: data ) as? [ [ String: Any ] ]
-        else { return }
+        else
+        {
+            HomebrewService.log.error( "Formula JSON could not be parsed" )
+
+            return
+        }
 
         var byName: [ String: Entry ] = [:]
 
