@@ -17,7 +17,7 @@ and the specification is [ENGINEERING.md](ENGINEERING.md).
 
 ## 2. Resume here
 
-Start with H-8, then H-9:
+Start with H-9:
 
 ```bash
 make submodules
@@ -32,7 +32,6 @@ None.
 
 | ID | Item | Reason | Acceptance | Owner | Blocked by |
 | --- | --- | --- | --- | --- | --- |
-| H-8 | Remove the duplicate `xcconfig` entry (path `xcconfig`) in `.gitmodules`; the agent sandbox cannot write that file | Duplicate submodule entry | `git submodule status` clean | Byron Scott Jones | none |
 | H-9 | Bring `README.md`, `BUILDING.md`, `SECURITY.md`, `AI_NOTICE.md`, and `CODE_OF_CONDUCT.md` to the Markdown lint rules and drop them from the ignore list in `.markdownlint-cli2.jsonc` | Inherited style does not pass | Lint passes with no ignores for these files | Byron Scott Jones | none |
 | H-10 | Low priority. Replace `hdiutil create` in `Scripts/package_arch.sh` with `diskutil image create from` | `hdiutil create` is deprecated and prints a warning; a future macOS may remove it | DMG builds without the warning, keeps the UDZO format, volume name and Applications link, and mounts correctly | Byron Scott Jones | none |
 | H-11 | Low priority. Split the About dialog copyright onto three lines, keeping the existing text: `Copyright © 2020 DigiDNA.`, `Enhancements Copyright © 2026 - Byron Scott Jones.`, `All rights reserved.` | The single-line notice in `NSHumanReadableCopyright` is hard to read | About window shows exactly those three lines with the current wording; `LICENSE` and source headers are unchanged; the label is tall enough that no line is clipped | Byron Scott Jones | none |

@@ -8,6 +8,21 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### chore/gitmodules-cleanup: remove duplicate submodule entry
+
+- Branch: `chore/gitmodules-cleanup`, base `main`
+- Worked on by: Byron Scott Jones (owner, edited `.gitmodules`); Claude Sonnet 5.5
+  (Claude Code, verification and documents)
+- What it did:
+  - Removed the stale `[submodule "xcconfig"]` entry (path `xcconfig`) from
+    `.gitmodules`. The real submodule at `Submodules/xcconfig` is unchanged
+    (HANDOFF H-8, done).
+- Spec and docs: none; HANDOFF H-8 removed.
+- Verification: `git submodule status` lists only `Submodules/xcconfig` at the
+  same commit, and `git submodule sync` succeeds. `make submodules` was not run.
+
+---
+
 ### chore/format-and-logging: os.Logger for Homebrew and formatter decision
 
 - Branch: `chore/format-and-logging`, base `ci/rework-workflows`
