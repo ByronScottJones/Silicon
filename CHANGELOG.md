@@ -8,6 +8,30 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### test/unit-tests: Swift Testing target and fat-header validation
+
+- Branch: `test/unit-tests`, base `chore/modernize-toolchain`
+- Worked on by: Byron Scott Jones (owner); Claude Sonnet 5.5 (Claude Code, author)
+- What it did:
+  - Added the `SiliconTests` unit-test target and a shared `Silicon` scheme whose
+    test action runs it. The target compiles `MachOFile`, `BinaryStream`, `App`,
+    `AppInfo`, and `HomebrewService` directly, so no app launch is needed.
+  - Added Swift Testing suites for the Mach-O parser, the label rules, Homebrew
+    lookup, and spec drift (`SpecificationTests`).
+  - `MachOFile` now rejects fat headers with 0 or 20 or more slices, which also
+    stops Java class files being reported as binaries (H-3).
+  - `HomebrewService` gained an internal `init( cacheDirectory: )` for tests.
+- Spec and docs: section 4 quirks, section 11, REQ-SEC-3, REQ-QA-2.
+- Verification: 25 tests pass with `xcodebuild test` (ad-hoc signed). The
+  spec-drift test was shown to fail by changing the `0x0100000C` table row, then
+  the spec was restored. The new fat-count tests were not run against the old
+  parser, so their ability to fail is unproven. UI, scan, and export paths are
+  not covered.
+- Notes: the project file was edited by hand because no `xcodeproj` tooling was
+  installed; Xcode opened no part of it.
+
+---
+
 ### chore/modernize-toolchain: macOS 14 target, Swift 6, structured concurrency
 
 - Branch: `chore/modernize-toolchain`, base `docs/project-standards`
