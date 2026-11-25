@@ -456,6 +456,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0586D5EC2566C7E700CBBD48 /* Debug.xcconfig */;
 			buildSettings = {
+				ARCHS = arm64;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Debug;
@@ -464,6 +465,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 0586D5ED2566C7E700CBBD48 /* Release.xcconfig */;
 			buildSettings = {
+				ARCHS = arm64;
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;
