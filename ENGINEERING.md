@@ -111,7 +111,7 @@ Requirements use RFC 2119 words. IDs are stable.
 - REQ-QA-1: First-party code MUST compile in Swift 6 language mode without
   warnings; warnings are errors in every configuration.
 - REQ-QA-2: Parsing and classification MUST be covered by automated tests (see
-  section 11). This is not yet met; see HANDOFF H-5.
+  section 11).
 
 ## 3. External interfaces
 
@@ -167,11 +167,11 @@ the macOS launch services, so `cli.md` does not apply.
 | `0xCFFAEDFE` | 64-bit Mach-O, little-endian |
 | `0xFEEDFACF` | 64-bit Mach-O, big-endian |
 
-Known quirks: Java class files share the `0xCAFEBABE` magic with fat binaries,
-so a Java class file is parsed as a fat binary with garbage architectures. The
-fat architecture count is not validated against the file size; reads are bounds
-checked, so an oversized count ends in a failed read and no result (tracked in
-HANDOFF as H-3).
+Known quirks: Java class files share the `0xCAFEBABE` magic with fat binaries.
+A fat header whose architecture count is 0 or 20 or more MUST be rejected (the
+same cut-off as `file(1)`), so a Java class file, whose count field is its
+version number, is not reported as a binary. A count that passes but exceeds
+the file's real entries ends in a failed bounds-checked read and no result.
 
 CPU types map to raw architecture strings:
 
@@ -385,10 +385,19 @@ make clean                # remove build output
 | --- | --- |
 | REQ-PLAT-1 | `xcodebuild -showBuildSettings` reports `ARCHS = arm64`; `lipo -archs` on the built executable prints `arm64` |
 | REQ-PLAT-2 | Compare `LSMinimumSystemVersion` in the built `Info.plist` with the target |
-| REQ-CLASS-2, REQ-CLASS-3 | Unit tests over every row in 5.2 (planned, H-5) |
-| REQ-SEC-3 | Unit tests feeding truncated and oversized headers to `MachOFile` (planned, H-5) |
+| REQ-CLASS-2, REQ-CLASS-3 | `ClassificationTests` over every row in 5.2 |
+| REQ-SEC-3 | `MachOFileTests`: truncated, oversized, zero, and Java-class headers |
 | REQ-SCAN-* | Manual scan of a prepared folder tree; see HANDOFF |
-| REQ-BREW-3 | Unit tests with fixture JSON (planned, H-5) |
+| REQ-BREW-3 | `HomebrewServiceTests` with fixture JSON |
+
+`SpecificationTests` fail when the CPU table, magic numbers, or label names in
+this file drift from the code. Run all tests with:
+
+```bash
+xcodebuild -project Silicon.xcodeproj -scheme Silicon -configuration Debug \
+  CODE_SIGN_IDENTITY=- CODE_SIGNING_REQUIRED=YES CODE_SIGNING_ALLOWED=YES \
+  CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= test
+```
 
 Results of running this plan are recorded in [CHANGELOG.md](CHANGELOG.md).
 

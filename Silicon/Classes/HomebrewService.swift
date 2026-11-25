@@ -52,10 +52,17 @@ public final class HomebrewService: @unchecked Sendable
     private static let formulaFeedURL: URL = URL( string: "https://formulae.brew.sh/api/formula.json" )!
     private static let maxCacheAge: TimeInterval = 86400 // 24 hours
 
-    private init()
+    private convenience init()
     {
         let home = FileManager.default.homeDirectoryForCurrentUser
-        self.cacheDir = home.appendingPathComponent( ".Silicon/homebrew_cache" )
+
+        self.init( cacheDirectory: home.appendingPathComponent( ".Silicon/homebrew_cache" ) )
+    }
+
+    /// Creates a service that caches under `cacheDirectory`. Tests use this to stay out of the home folder.
+    init( cacheDirectory: URL )
+    {
+        self.cacheDir = cacheDirectory
     }
 
     /// Load from cache if fresh; otherwise fetch from the network.

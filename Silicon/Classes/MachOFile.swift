@@ -29,6 +29,9 @@ public class MachOFile
 {
     public private( set ) var architectures: [ String ] = []
     
+    /// Fat headers with this many slices or more are not treated as Mach-O (same cut-off as file(1)).
+    private static let maximumFatArchitectures: UInt32 = 20
+    
     public init?( path: String )
     {
         do
@@ -39,6 +42,12 @@ public class MachOFile
             if magic == 0xCAFEBABE
             {
                 let count = try stream.readBigEndianUnsignedInteger()
+                
+                // Java class files share this magic, and a zero count describes nothing.
+                guard count >= 1, count < MachOFile.maximumFatArchitectures else
+                {
+                    return nil
+                }
                 
                 for _ in 0 ..< count
                 {

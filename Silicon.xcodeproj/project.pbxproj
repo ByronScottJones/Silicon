@@ -25,6 +25,16 @@
 		0586D5922566C30600CBBD48 /* Icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0586D5912566C30600CBBD48 /* Icon.icns */; };
 		0586D6212566CED200CBBD48 /* DropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D6202566CED200CBBD48 /* DropView.swift */; };
 		05F025552575FF1200ADB3EA /* MainWindowController.strings in Resources */ = {isa = PBXBuildFile; fileRef = 05F025512575FF1200ADB3EA /* MainWindowController.strings */; };
+		AA2000000000000000000001 /* MachOFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000001 /* MachOFixtures.swift */; };
+		AA2000000000000000000002 /* MachOFileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000002 /* MachOFileTests.swift */; };
+		AA2000000000000000000003 /* ClassificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000003 /* ClassificationTests.swift */; };
+		AA2000000000000000000004 /* HomebrewServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000004 /* HomebrewServiceTests.swift */; };
+		AA2000000000000000000005 /* SpecificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA1000000000000000000005 /* SpecificationTests.swift */; };
+		AA3000000000000000000001 /* MachOFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D5782566B31A00CBBD48; };
+		AA3000000000000000000002 /* BinaryStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D5752566B14200CBBD48; };
+		AA3000000000000000000003 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0586D55C2566978100CBBD48; };
+		AA3000000000000000000004 /* AppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057BA11D28884F1E00324D16; };
+		AA3000000000000000000005 /* HomebrewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF02BREW00000000000000001; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,10 +104,23 @@
 		0586D6202566CED200CBBD48 /* DropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropView.swift; sourceTree = "<group>"; };
 		05F025522575FF1200ADB3EA /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/MainWindowController.strings"; sourceTree = "<group>"; };
 		05F025562575FF1A00ADB3EA /* zh-HK */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-HK"; path = "zh-HK.lproj/MainWindowController.strings"; sourceTree = "<group>"; };
+		AA1000000000000000000001 /* MachOFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachOFixtures.swift; sourceTree = "<group>"; };
+		AA1000000000000000000002 /* MachOFileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MachOFileTests.swift; sourceTree = "<group>"; };
+		AA1000000000000000000003 /* ClassificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassificationTests.swift; sourceTree = "<group>"; };
+		AA1000000000000000000004 /* HomebrewServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomebrewServiceTests.swift; sourceTree = "<group>"; };
+		AA1000000000000000000005 /* SpecificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpecificationTests.swift; sourceTree = "<group>"; };
+		AA4000000000000000000001 /* SiliconTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SiliconTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0586D544256696D900CBBD48 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA7000000000000000000002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -119,6 +142,7 @@
 			children = (
 				0586D5E82566C7E700CBBD48 /* xcconfig */,
 				0586D549256696D900CBBD48 /* Silicon */,
+				AA5000000000000000000001 /* SiliconTests */,
 				0586D548256696D900CBBD48 /* Products */,
 				055568422567831F00B42091 /* Frameworks */,
 			);
@@ -128,6 +152,7 @@
 			isa = PBXGroup;
 			children = (
 				0586D547256696D900CBBD48 /* Silicon.app */,
+				AA4000000000000000000001 /* SiliconTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -299,6 +324,18 @@
 			path = Scripts;
 			sourceTree = "<group>";
 		};
+		AA5000000000000000000001 /* SiliconTests */ = {
+			isa = PBXGroup;
+			children = (
+				AA1000000000000000000001 /* MachOFixtures.swift */,
+				AA1000000000000000000002 /* MachOFileTests.swift */,
+				AA1000000000000000000003 /* ClassificationTests.swift */,
+				AA1000000000000000000004 /* HomebrewServiceTests.swift */,
+				AA1000000000000000000005 /* SpecificationTests.swift */,
+			);
+			path = SiliconTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -320,6 +357,23 @@
 			productReference = 0586D547256696D900CBBD48 /* Silicon.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AA6000000000000000000001 /* SiliconTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA8000000000000000000001 /* Build configuration list for PBXNativeTarget "SiliconTests" */;
+			buildPhases = (
+				AA7000000000000000000001 /* Sources */,
+				AA7000000000000000000002 /* Frameworks */,
+				AA7000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SiliconTests;
+			productName = SiliconTests;
+			productReference = AA4000000000000000000001 /* SiliconTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -331,6 +385,9 @@
 				TargetAttributes = {
 					0586D546256696D900CBBD48 = {
 						CreatedOnToolsVersion = 12.2;
+					};
+					AA6000000000000000000001 = {
+						CreatedOnToolsVersion = 27.0;
 					};
 				};
 			};
@@ -352,6 +409,7 @@
 			projectRoot = "";
 			targets = (
 				0586D546256696D900CBBD48 /* Silicon */,
+				AA6000000000000000000001 /* SiliconTests */,
 			);
 		};
 /* End PBXProject section */
@@ -366,6 +424,13 @@
 				0586D5922566C30600CBBD48 /* Icon.icns in Resources */,
 				0586D550256696DA00CBBD48 /* MainMenu.xib in Resources */,
 				05F025552575FF1200ADB3EA /* MainWindowController.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA7000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -410,6 +475,23 @@
 				05680C07256F7E0C000520F2 /* IsZero.swift in Sources */,
 				FF01PREFS0000000000000002 /* PreferencesWindowController.swift in Sources */,
 				FF02BREW00000000000000002 /* HomebrewService.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA7000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA2000000000000000000001 /* MachOFixtures.swift in Sources */,
+				AA2000000000000000000002 /* MachOFileTests.swift in Sources */,
+				AA2000000000000000000003 /* ClassificationTests.swift in Sources */,
+				AA2000000000000000000004 /* HomebrewServiceTests.swift in Sources */,
+				AA2000000000000000000005 /* SpecificationTests.swift in Sources */,
+				AA3000000000000000000001 /* MachOFile.swift in Sources */,
+				AA3000000000000000000002 /* BinaryStream.swift in Sources */,
+				AA3000000000000000000003 /* App.swift in Sources */,
+				AA3000000000000000000004 /* AppInfo.swift in Sources */,
+				AA3000000000000000000005 /* HomebrewService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -506,6 +588,36 @@
 			};
 			name = Release;
 		};
+		AA8000000000000000000002 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.DigiDNA.SiliconTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		AA8000000000000000000003 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.DigiDNA.SiliconTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -523,6 +635,15 @@
 			buildConfigurations = (
 				0586D556256696DA00CBBD48 /* Debug */,
 				0586D557256696DA00CBBD48 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA8000000000000000000001 /* Build configuration list for PBXNativeTarget "SiliconTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA8000000000000000000002 /* Debug */,
+				AA8000000000000000000003 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
