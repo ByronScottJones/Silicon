@@ -5,22 +5,29 @@ and the specification is [ENGINEERING.md](ENGINEERING.md).
 
 ## 1. Status
 
-- Last updated (UTC): 2026-11-25T15:40:00Z
-- In flight: none on this branch (documentation only).
+- Last updated (UTC): 2026-11-25T18:31:11Z
+- In flight: none. All feature branches are merged; this handoff update is the
+  only open branch (`docs/handoff-update`).
 - Build: Debug and Release build with Xcode 27 and no first-party warnings
   (verified 2026-11-25). The built executable is `arm64` with
   `LSMinimumSystemVersion` 14.0.
 - Tests: 25 Swift Testing cases in `SiliconTests` pass locally (verified
   2026-11-25). They run in the Debug CI job once CI has run.
-- CI: the reworked workflows have not run on GitHub yet. First run: start `CI`
-  from the Actions tab (`workflow_dispatch`) and confirm both jobs pass.
+- CI: manual only. The reworked workflows have never run on GitHub; start `CI`
+  from the Actions tab (`workflow_dispatch`) and confirm both jobs pass. If one
+  fails, fix it before anything else.
+- Manual checks done by the owner: footer counter width during a scan
+  (2026-11-25). Not yet done: scan cancel, CSV and HTML export, Homebrew
+  refresh, audio plugin scan.
 
 ## 2. Resume here
 
-Start with H-9 (H-12 is waiting for a visual check, see Section 6):
+1. Run `CI` once from the Actions tab and confirm it passes (see Status).
+2. Run the unchecked manual checks listed in Status on a Release build.
+3. Then take H-9, followed by the low-priority items H-10, H-11, H-13, H-14.
 
 ```bash
-make submodules
+make submodules    # not yet run since the .gitmodules cleanup
 make build
 ```
 
@@ -50,9 +57,6 @@ None.
 
 ## 6. Known issues, risks, and unverified areas
 
-- REQ-UI-5 (footer counter width) is built and passes the tests, but nobody has
-  watched the footer during a real scan with more than 1,000 results. Check that
-  the sort menu and filter checkboxes stay still while the count rises.
 - Scanning, filtering, export, and the UI have no automated coverage; only
   parsing, classification, Homebrew lookup, and the spec tables are tested.
 - The Release run script phase edits `Silicon/Info.plist` in place, which can
@@ -62,8 +66,20 @@ None.
 
 - Xcode 27 era toolchain on macOS 27; the sandboxed agent shell cannot run
   `xcodebuild` and needs to run it unsandboxed.
-- The owner pushes and merges. No credentials are recorded here.
+- The owner merges pull requests. The agent pushes branches and opens pull
+  requests through the GitHub REST API (`ghx --owner ByronScottJones api -X POST
+  repos/ByronScottJones/silicon/pulls --input <file>`), because `ghx pr create`
+  (GraphQL) is refused even though the token has pull request write access.
+  Cause not investigated. The fine-grained token expires 2027-10-04.
+- The agent sandbox cannot write `.gitmodules`; the owner edits it.
+- Before pushing a rebased branch use `git push --force-with-lease`.
+- No credentials are recorded here.
 
 ## 8. Cleanup debt
 
 - `build/` holds ignored local build output.
+- `Silicon/Info.plist` has an uncommitted local change (`CFBundleVersion`
+  rewritten by a Release build). Do not commit it; discard it with the owner's
+  agreement.
+- Merged branches still on the remote and safe to delete: `chore/format-and-logging`,
+  `docs/project-standards`, `fix/footer-counter-width`.

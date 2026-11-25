@@ -8,6 +8,19 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### docs/handoff-update: end-of-session handoff
+
+- Branch: `docs/handoff-update`, base `main`
+- Worked on by: Byron Scott Jones (owner); Claude Sonnet 5.5 (Claude Code, author)
+- What it did:
+  - Rewrote the HANDOFF status, resume steps, environment notes, and cleanup
+    debt for the next session.
+  - Recorded the owner's footer check against the footer entry.
+- Spec and docs: HANDOFF, CHANGELOG only.
+- Verification: markdownlint passes. No code changed.
+
+---
+
 ### fix/footer-counter-width: fixed minimum width for the footer counter
 
 - Branch: `fix/footer-counter-width`, base `main`
@@ -20,7 +33,9 @@ commit ids) are deliberately not recorded here; read them from git. See
 - Verification: the project builds and the 25 tests pass. The 48 point figure
   comes from measuring the system font at 13 points (four digits 33, five
   digits 41 points, plus padding). The footer was not watched in the running
-  app (HANDOFF section 6).
+  app when this entry was written.
+- Update (2026-11-25): the owner watched the footer during a real scan and
+  confirmed the controls stay still as the count rises.
 
 ---
 
