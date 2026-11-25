@@ -20,8 +20,9 @@ commit ids) are deliberately not recorded here; read them from git. See
     snapshots of the global topic files.
 - Spec and docs: all of `ENGINEERING.md`; `AGENTS.md` routing table.
 - Verification: spec statements checked by reading `MachOFile.swift`,
-  `App.swift`, and `MainWindowController.swift`; Markdown lint not yet run
-  (see Notes).
+  `App.swift`, and `MainWindowController.swift`. `markdownlint-cli2` passes on
+  `AGENTS.md`, `ENGINEERING.md`, `HANDOFF.md`, and `CHANGELOG.md` (the other
+  Markdown files are excluded, HANDOFF H-9).
 - Notes: spec drift found while writing it (fat header count not validated,
   `print` logging, deployment target rejected by current Xcode) is in HANDOFF.
 
