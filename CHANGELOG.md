@@ -8,6 +8,22 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### fix/footer-counter-width: fixed minimum width for the footer counter
+
+- Branch: `fix/footer-counter-width`, base `main`
+- Worked on by: Byron Scott Jones (owner); Claude Sonnet 5.5 (Claude Code, author)
+- What it did:
+  - Added a width constraint (at least 48 points) to the "Applications Found"
+    counter in `MainWindowController.xib`, so the spinner, sort menu and
+    checkboxes no longer shift as the number grows (HANDOFF H-12, done).
+- Spec and docs: REQ-UI-5.
+- Verification: the project builds and the 25 tests pass. The 48 point figure
+  comes from measuring the system font at 13 points (four digits 33, five
+  digits 41 points, plus padding). The footer was not watched in the running
+  app (HANDOFF section 6).
+
+---
+
 ### chore/gitmodules-cleanup: remove duplicate submodule entry
 
 - Branch: `chore/gitmodules-cleanup`, base `main`

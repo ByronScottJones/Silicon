@@ -86,6 +86,10 @@ Requirements use RFC 2119 words. IDs are stable.
 - REQ-UI-2: The six filter checkboxes MUST filter results as defined in 5.3.
 - REQ-UI-3: Export MUST write the currently visible, filtered, sorted rows.
 - REQ-UI-4: UI state MUST be mutated on the main actor only.
+- REQ-UI-5: The "Applications Found" counter in the footer MUST have a minimum
+  width of 48 points (room for five digits in the 13 point system font, with
+  the text field's padding), so the controls to its right do not move while the
+  count rises. It MAY grow beyond that for six or more digits.
 
 ### Homebrew
 
