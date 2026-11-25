@@ -17,6 +17,9 @@ commit ids) are deliberately not recorded here; read them from git. See
     through `os.Logger`.
   - Recorded decision D-4: formatter work deferred; the existing code style is
     kept and `swift-format` is not enforced.
+  - Logged low-priority future work in HANDOFF (H-10 to H-14): `diskutil` DMG
+    packaging, About copyright lines, footer counter width, startup screen
+    redesign, and a separate audio plugin section.
 - Spec and docs: section 8, decision D-4, HANDOFF section 5.
 - Verification: 25 tests pass. The log calls themselves were not exercised.
 - Notes: `swift format lint` with default rules reported 3,923 findings on
