@@ -1,45 +1,70 @@
 name: CI
 
+# Runs only when started manually. To run automatically on pushes and pull
+# requests, set the repository variable AUTO_CI to 'true' (see agents/githubactions.md).
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
-    name: Build (macOS)
+  build-and-test:
+    name: Build and test (${{ matrix.configuration }})
+    if: github.event_name == 'workflow_dispatch' || vars.AUTO_CI == 'true'
     runs-on: macos-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [ Debug, Release ]
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: recursive
+          fetch-depth: 1
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
-      - name: Build (Debug)
+      - name: Build
+        run: |
+          xcodebuild \
+            -project Silicon.xcodeproj \
+            -scheme Silicon \
+            -configuration "${{ matrix.configuration }}" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Verify arm64-only executable
+        run: |
+          EXECUTABLE="build/DerivedData/Build/Products/${{ matrix.configuration }}/Silicon.app/Contents/MacOS/Silicon"
+          ARCHS="$(lipo -archs "$EXECUTABLE")"
+          echo "Executable architectures: $ARCHS"
+          test "$ARCHS" = "arm64"
+
+      - name: Test
+        if: matrix.configuration == 'Debug'
         run: |
           xcodebuild \
             -project Silicon.xcodeproj \
             -scheme Silicon \
             -configuration Debug \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion" \
-            build
-
-      - name: Build (Release)
-        run: |
-          xcodebuild \
-            -project Silicon.xcodeproj \
-            -scheme Silicon \
-            -configuration Release \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion" \
-            build
+            -derivedDataPath build/DerivedData \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=YES \
+            CODE_SIGNING_ALLOWED=YES \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM= \
+            test

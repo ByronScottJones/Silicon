@@ -314,12 +314,13 @@ opens the repo URL via `NSWorkspace.shared.open(_:)`.
 
 ## CI / Release
 
-- **CI** (`.github/workflows/ci.yaml`): Builds Debug + Release on every push/PR
-  to `main` (rework tracked in HANDOFF H-7).
-- **Release** (`.github/workflows/release.yaml`): Triggered by pushing a
-  `v*.*.*` tag. Builds Release, zips `Silicon.app` with `ditto`, and publishes
-  a GitHub Release with the archive. Release notes are written manually with
-  `gh release create`.
+- **CI** (`.github/workflows/ci.yaml`): manual (`workflow_dispatch`) unless the
+  repository variable `AUTO_CI` is `true`. Builds Debug and Release, checks that
+  the executable is arm64 only, and runs the tests.
+- **Release** (`.github/workflows/release.yaml`): triggered by pushing a
+  `v*.*.*` tag. Builds Release, checks arm64, zips `Silicon.app` with `ditto`,
+  and publishes a GitHub Release with the archive.
+- Actions are pinned to commit SHAs; keep them pinned (Dependabot updates them).
 
 To cut a release:
 
