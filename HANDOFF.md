@@ -11,12 +11,13 @@ and the specification is [ENGINEERING.md](ENGINEERING.md).
   (verified 2026-11-25). The built executable is `arm64` with
   `LSMinimumSystemVersion` 14.0.
 - Tests: 25 Swift Testing cases in `SiliconTests` pass locally (verified
-  2026-11-25). They are not yet run in CI (H-6, H-7).
-- CI: not verified.
+  2026-11-25). They run in the Debug CI job once CI has run.
+- CI: the reworked workflows have not run on GitHub yet. First run: start `CI`
+  from the Actions tab (`workflow_dispatch`) and confirm both jobs pass.
 
 ## 2. Resume here
 
-Start with H-7 (CI), then H-6 (formatter and linter):
+Start with H-6 (formatter and linter):
 
 ```bash
 make submodules
@@ -32,8 +33,7 @@ None.
 | ID | Item | Reason | Acceptance | Owner | Blocked by |
 | --- | --- | --- | --- | --- | --- |
 | H-4 | Add `os.Logger` output for scan and Homebrew failures | `swift.md` standard; failures are silent today | Section 8 updated | Byron Scott Jones | none |
-| H-6 | Add formatter and linter configuration, `.swift-version`, and a CI test step | `swift.md` standard | `swift format lint --strict` passes in CI | Byron Scott Jones | H-7 |
-| H-7 | Rework CI: single workflow, SHA-pinned actions, `permissions`, manual trigger gate, arm64 artifact check, test step | `githubactions.md` standard | `validate-github-actions` reports clean | Byron Scott Jones | none |
+| H-6 | Add formatter and linter configuration and `.swift-version`, then run `swift format lint --strict` in CI | `swift.md` standard | `swift format lint --strict` passes in CI | Byron Scott Jones | none |
 | H-8 | Remove the duplicate `xcconfig` entry (path `xcconfig`) in `.gitmodules`; the agent sandbox cannot write that file | Duplicate submodule entry | `git submodule status` clean | Byron Scott Jones | none |
 | H-9 | Bring `README.md`, `BUILDING.md`, `SECURITY.md`, `AI_NOTICE.md`, and `CODE_OF_CONDUCT.md` to the Markdown lint rules and drop them from the ignore list in `.markdownlint-cli2.jsonc` | Inherited style does not pass | Lint passes with no ignores for these files | Byron Scott Jones | none |
 

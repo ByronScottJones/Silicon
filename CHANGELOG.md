@@ -8,6 +8,29 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### ci/rework-workflows: single gated CI workflow with pinned actions
+
+- Branch: `ci/rework-workflows`, base `test/unit-tests`
+- Worked on by: Byron Scott Jones (owner); Claude Sonnet 5.5 (Claude Code, author)
+- What it did:
+  - Removed `ci-mac.yaml`, which duplicated `ci.yaml` and used `checkout@v1`.
+  - Gated `ci.yaml` behind `workflow_dispatch` or `vars.AUTO_CI == 'true'`, added
+    `contents: read` permissions, concurrency, timeouts, shallow checkout, a
+    `lipo` arm64 assertion, and a test step.
+  - Pinned `actions/checkout` (v7.0.1) and `softprops/action-gh-release` (v3.0.4)
+    to commit SHAs, resolved from the GitHub API on 2026-11-25.
+  - Release workflow asserts arm64, names the archive `-arm64.zip`, and can also
+    be started manually with a `tag` input naming an existing `vX.Y.Z` tag
+    (validated, then checked out).
+  - Added Dependabot for GitHub Actions.
+- Spec and docs: section 10, AGENTS CI section.
+- Verification: workflow YAML parses; the SHAs were read from GitHub. The
+  workflows have not run on GitHub, and `actionlint` was not available.
+- Notes: the release workflow keeps its tag trigger ungated because pushing a
+  tag is already a deliberate action.
+
+---
+
 ### test/unit-tests: Swift Testing target and fat-header validation
 
 - Branch: `test/unit-tests`, base `chore/modernize-toolchain`

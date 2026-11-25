@@ -375,9 +375,18 @@ make clean                # remove build output
 - `SIGNING=unsigned` (default), `adhoc`, or `automatic`.
 - Release builds write `CFBundleVersion` from the git commit count through a run
   script phase.
-- CI: `.github/workflows/ci.yaml` builds Debug and Release on a macOS runner.
-- Release: pushing a `v*.*.*` tag runs `.github/workflows/release.yaml`, which
-  builds, zips the app, and publishes a GitHub Release.
+- CI: `.github/workflows/ci.yaml` builds Debug and Release on `macos-latest`,
+  asserts `lipo -archs` prints exactly `arm64`, and runs the tests (Debug). It
+  runs only through `workflow_dispatch` unless the repository variable
+  `AUTO_CI` is `true`, which also enables the `push` and `pull_request`
+  triggers on `main`.
+- Third-party actions are pinned to full commit SHAs and updated by Dependabot
+  (`.github/dependabot.yml`). Workflow permissions default to `contents: read`.
+- Release: pushing a `v*.*.*` tag, or starting `.github/workflows/release.yaml`
+  by hand with the `tag` input naming an existing tag, validates the tag name
+  (`vMAJOR.MINOR.PATCH`), checks out that tag, builds, asserts the arm64-only
+  executable, zips the app as `Silicon-<tag>-arm64.zip`, and publishes a GitHub
+  Release (the only job with `contents: write`).
 
 ## 11. Verification plan
 
