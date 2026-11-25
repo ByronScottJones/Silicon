@@ -52,7 +52,8 @@ Requirements use RFC 2119 words. IDs are stable.
 
 ### Scanning
 
-- REQ-SCAN-1: A scan MUST run off the main thread.
+- REQ-SCAN-1: A scan MUST run off the main actor in a cancellable task, and
+  cancelling it MUST stop the file system walk promptly.
 - REQ-SCAN-2: Paths under `/Volumes` MUST be skipped.
 - REQ-SCAN-3: Only directories whose name ends in `.app` MUST be treated as
   application bundles during a normal scan.
@@ -84,7 +85,7 @@ Requirements use RFC 2119 words. IDs are stable.
   options in section 4.
 - REQ-UI-2: The six filter checkboxes MUST filter results as defined in 5.3.
 - REQ-UI-3: Export MUST write the currently visible, filtered, sorted rows.
-- REQ-UI-4: UI state MUST be mutated on the main thread only.
+- REQ-UI-4: UI state MUST be mutated on the main actor only.
 
 ### Homebrew
 
@@ -107,8 +108,8 @@ Requirements use RFC 2119 words. IDs are stable.
 
 ### Quality
 
-- REQ-QA-1: First-party code SHOULD compile without warnings. This is not yet
-  met; see HANDOFF H-2.
+- REQ-QA-1: First-party code MUST compile in Swift 6 language mode without
+  warnings; warnings are errors in every configuration.
 - REQ-QA-2: Parsing and classification MUST be covered by automated tests (see
   section 11). This is not yet met; see HANDOFF H-5.
 
@@ -217,7 +218,7 @@ hours.
    entry is dropped silently. This is the normal case for non-app directories.
 4. If `recurseIntoApps` is `false`, prune the bundle's descendants.
 5. Audio plugin roots: every non-directory file goes to `App(binaryPath:)`.
-6. Insert each result into the results controller on the main thread, omitting
+6. Insert each result into the results controller on the main actor, omitting
    Apple bundles when `excludeAppleApps` is `true`.
 7. When the scan finishes and `checkHomebrew` is `true`, run the Homebrew lookup
    over all results and refresh the table.
@@ -283,10 +284,10 @@ dictionary (`{"target": "App.app"}`); both MUST be handled.
 
 ```text
 FileManager.enumerator
-    -> findApps (background queue)
+    -> AppScanner.apps() (detached task, AsyncStream)
         -> App(path:)       -> AppInfo -> MachOFile -> BinaryStream
         -> App(binaryPath:) -> MachOFile -> BinaryStream
-    -> allApps (NSArrayController, main thread)
+    -> allApps (NSArrayController, main actor)
         -> archFilteredApps (predicate)
             -> arrayController (sort) -> NSTableView
 ```
@@ -344,22 +345,22 @@ MUST resolve the delegate lazily at action time.
   `nil`.
 - Homebrew fetch failures are returned to the caller as an `Error` through the
   completion handler; they do not stop or fail a scan.
-- The app has no exit-code contract. Diagnostics are written with `print` today;
-  moving to `os.Logger` is tracked in HANDOFF as H-4.
+- The app has no exit-code contract. It emits no diagnostics today; adding
+  `os.Logger` output is tracked in HANDOFF as H-4.
 
 ## 9. Technology and dependencies
 
 | Item | Value | Reason |
 | --- | --- | --- |
-| Language | Swift 5 | Existing code base |
+| Language | Swift 6 language mode | `swift.md` standard; complete concurrency checking |
 | UI | AppKit, XIB, Cocoa Bindings | Existing code base |
 | Architectures | `arm64` | REQ-PLAT-1 |
-| Deployment target | macOS 11.0 (project setting) | Existing value; current Xcode only supports 12.0 and later, so the build fails (HANDOFF H-1) |
+| Deployment target | macOS 14.0 | Supported by current Xcode; macOS Sonoma and later |
 | Bundle ID | `com.DigiDNA.Silicon` | Inherited from upstream |
 | `Submodules/xcconfig` | Pinned by the submodule commit | Shared warnings and build settings |
 | Build tool | Xcode and `xcodebuild` | No Swift Package Manager |
 
-The in-app updater submodule is not present in this fork's checkout.
+This fork has no in-app updater and no third-party runtime dependencies.
 
 ## 10. Build, run, test, and release
 

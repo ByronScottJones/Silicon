@@ -23,17 +23,13 @@ make dist         # Create the Apple Silicon DMG
 make clean        # Remove build output
 ```
 
-Apple Silicon builds default to `MACOSX_DEPLOYMENT_TARGET=11.0` because macOS
-arm64 apps require macOS Big Sur or later. Override it only if your Xcode setup
-supports the value:
+Silicon builds for Apple Silicon (arm64) only and defaults to
+`MACOSX_DEPLOYMENT_TARGET=14.0` (macOS Sonoma). Override it only if your Xcode
+setup supports the value:
 
 ```sh
-make dmg-arm ARM64_DEPLOYMENT_TARGET=11.0
+make dmg-arm ARM64_DEPLOYMENT_TARGET=14.0
 ```
-
-The default wrapper flags suppress warning noise from the `GitHubUpdates`
-submodule, including macOS 11 deprecation warnings that otherwise break arm64
-Release builds because that submodule treats warnings as errors.
 
 By default, the Makefile creates unsigned local builds, matching CI:
 

@@ -25,7 +25,7 @@
 
 import Cocoa
 
-@main class ApplicationDelegate: NSObject, NSApplicationDelegate
+@main @MainActor class ApplicationDelegate: NSObject, NSApplicationDelegate
 {
     @objc public private( set ) dynamic var mainWindowController       = MainWindowController()
     @objc public private( set ) dynamic var aboutWindowController      = AboutWindowController()

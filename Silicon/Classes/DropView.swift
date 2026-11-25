@@ -46,9 +46,13 @@ public class DropView: NSView
     
     public override func awakeFromNib()
     {
-        if self.allowDrop
+        // AppKit calls awakeFromNib on the main thread; the base declaration is nonisolated.
+        MainActor.assumeIsolated
         {
-            self.registerForDraggedTypes( [ .fileURL ] )
+            if self.allowDrop
+            {
+                self.registerForDraggedTypes( [ .fileURL ] )
+            }
         }
     }
     

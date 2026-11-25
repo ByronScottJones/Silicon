@@ -80,8 +80,8 @@ make dist SIGNING=adhoc
 make dist SIGNING=automatic
 ```
 
-Apple Silicon builds use `MACOSX_DEPLOYMENT_TARGET=11.0` by default because
-macOS arm64 apps require Big Sur or later. Output is written under
+Silicon builds for Apple Silicon only and requires macOS 14 (Sonoma) or later
+(`MACOSX_DEPLOYMENT_TARGET=14.0`). Output is written under
 `build/dist/`. Additional build details are in [BUILDING.md](BUILDING.md) and
 [ENGINEERING.md](ENGINEERING.md).
 
