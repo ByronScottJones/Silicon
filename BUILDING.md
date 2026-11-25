@@ -16,12 +16,10 @@ DMG files.
 ## Common Commands
 
 ```sh
-make build        # Build Release for the host/default architecture
-make app-intel    # Build and stage build/dist/x86_64/Silicon.app
+make build        # Build Release (arm64 only)
 make app-arm      # Build and stage build/dist/arm64/Silicon.app
-make dmg-intel    # Create build/dist/Silicon-<version>-x86_64.dmg
 make dmg-arm      # Create build/dist/Silicon-<version>-arm64.dmg
-make dist         # Create both Intel and Apple Silicon DMGs
+make dist         # Create the Apple Silicon DMG
 make clean        # Remove build output
 ```
 

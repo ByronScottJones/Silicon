@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
     cat <<'USAGE'
-Usage: Scripts/package_arch.sh --arch x86_64|arm64 [options]
+Usage: Scripts/package_arch.sh --arch arm64 [options]
 
 Builds Silicon.app for one architecture, stages the .app under build/dist,
 and optionally creates a matching DMG.
@@ -87,8 +87,8 @@ while [ "$#" -gt 0 ]; do
     esac
 done
 
-if [ "$ARCH" != "x86_64" ] && [ "$ARCH" != "arm64" ]; then
-    echo "--arch must be x86_64 or arm64" >&2
+if [ "$ARCH" != "arm64" ]; then
+    echo "--arch must be arm64 (Silicon builds for Apple Silicon only)" >&2
     exit 2
 fi
 
