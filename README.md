@@ -83,10 +83,18 @@ make dist SIGNING=automatic
 Apple Silicon builds use `MACOSX_DEPLOYMENT_TARGET=11.0` by default because
 macOS arm64 apps require Big Sur or later. Output is written under
 `build/dist/`. Additional build details are in [BUILDING.md](BUILDING.md) and
-[Engineering.md](Engineering.md).
+[ENGINEERING.md](ENGINEERING.md).
 
-Changelog
----------
+Project Documents
+-----------------
+
+- [ENGINEERING.md](ENGINEERING.md): specification
+- [HANDOFF.md](HANDOFF.md): outstanding work
+- [CHANGELOG.md](CHANGELOG.md): history of all work
+- [AGENTS.md](AGENTS.md): guidance for AI agents
+
+Release Notes
+-------------
 
 ### Unreleased
 - Replaced the Folder Blacklist preferences table with Special Folders that can be marked Included or Excluded

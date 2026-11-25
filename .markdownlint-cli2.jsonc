@@ -1,0 +1,7 @@
+{
+  // Tables and code blocks hold content that cannot be wrapped.
+  "config": { "MD013": { "line_length": 80, "tables": false, "code_blocks": false } },
+  // Upstream-inherited files are listed in HANDOFF H-9 and linted later.
+  // Project copies of global guidance are snapshots and are not linted here.
+  "ignores": ["agents/**", "Submodules/**", "node_modules/**", "build/**", "README.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "AI_NOTICE.md", "BUILDING.md"]
+}
