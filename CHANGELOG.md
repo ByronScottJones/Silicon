@@ -15,8 +15,8 @@ commit ids) are deliberately not recorded here; read them from git. See
 - What it did:
   - `HomebrewService` logs load failures, non-200 responses, and unparseable JSON
     through `os.Logger`.
-  - Recorded decision D-4: keep the existing code style and do not enforce
-    `swift-format`.
+  - Recorded decision D-4: formatter work deferred; the existing code style is
+    kept and `swift-format` is not enforced.
 - Spec and docs: section 8, decision D-4, HANDOFF section 5.
 - Verification: 25 tests pass. The log calls themselves were not exercised.
 - Notes: `swift format lint` with default rules reported 3,923 findings on

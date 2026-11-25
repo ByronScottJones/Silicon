@@ -436,19 +436,20 @@ Results of running this plan are recorded in [CHANGELOG.md](CHANGELOG.md).
 - Consequences: concurrency and testing changes must preserve the KVC rules in
   section 6.
 
-### D-4: No enforced Swift formatter (accepted)
+### D-4: Swift formatting deferred (deferred)
 
 - Context: `swift.md` names `swift-format` as the default, but the code base
   uses the upstream author's style (opening brace on its own line, spaces inside
   parentheses, aligned assignments). `swift format lint` with default rules
   reports 3,923 findings on `Silicon/Classes`, and its options cannot express
   that brace style.
-- Choice: keep the existing style and do not enforce a formatter. New code
-  matches the surrounding code. The project's own convention outranks the
-  default, as `coding.md` allows.
+- Choice: defer formatter work. For now keep the existing style and do not
+  enforce a formatter; new code matches the surrounding code. The owner is
+  investigating whether an automated tool can bring the code into compliance.
+  The project's own convention outranks the default, as `coding.md` allows.
 - Rationale: reformatting every file would bury the real history of the fork in
   one change and make upstream merges harder.
 - Rejected: adopting `swift-format` defaults and reformatting; a custom
   `.swift-format` that disables most rules (it would enforce almost nothing).
-- Consequences: style is a review concern. Revisit if the owner decides to
-  reformat (HANDOFF section 5).
+- Consequences: style is a review concern until the owner decides (HANDOFF
+  section 5).

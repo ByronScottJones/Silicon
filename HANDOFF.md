@@ -37,10 +37,10 @@ None.
 
 ## 5. Decisions needed
 
-- Format the code base with `swift-format`? Options: keep the upstream style
-  (current, decision D-4) or reformat everything once, then enforce
-  `swift format lint --strict` in CI. Recommendation: keep the style unless the
-  fork stops tracking upstream.
+- Format the code base with `swift-format`? Deferred (decision D-4): the owner
+  is investigating whether an automated tool can bring the code into
+  compliance. Options: keep the upstream style, or reformat everything once and
+  enforce `swift format lint --strict` in CI.
 - Which Git identity is the maintainer's? History shows both `Byron Scott Jones`
   and `ByronJones-Elsevier`. Recommendation: record the second as an alias of the
   first only after the owner confirms it.
