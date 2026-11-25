@@ -54,14 +54,14 @@ Silicon?" and "Is there a newer version available via Homebrew?"
 
 | Concern | Technology |
 | --- | --- |
-| Language | Swift 5 (Swift 6 migration tracked in HANDOFF H-2) |
+| Language | Swift 6 language mode |
 | UI | AppKit, XIB files, Cocoa Bindings |
 | Data binding | `@objc dynamic` + `NSArrayController` |
 | Persistence | `UserDefaults` |
-| Concurrency | GCD (`DispatchQueue`) |
-| Networking | `URLSession` + `DispatchGroup` |
+| Concurrency | Swift concurrency (`Task`, `AsyncStream`, `async`/`await`) |
+| Networking | `URLSession` async API |
 | Build | Xcode project only (no SPM) |
-| Updates | `GitHubUpdates` submodule framework |
+| Shared build settings | `Submodules/xcconfig` |
 | CI | GitHub Actions (`.github/workflows/`) |
 
 ---
@@ -116,18 +116,20 @@ allApps  →  archFilteredApps  →  arrayController  →  NSTableView
 
 When adding a new filter dimension, apply it as a `filterPredicate` on
 `archFilteredApps` (or chain a fourth controller if the filter is independent
-of architecture). Do not filter inside `findApps()` — keep scanning and display
+of architecture). Do not filter inside `AppScanner` — keep scanning and display
 concerns separate.
 
 ---
 
 ## Scanning Architecture
 
-`findApps()` runs on a background GCD queue (`userInitiated`). It uses
-`FileManager.enumerator` to walk directories. For each `.app` path found during
-normal app scans, it initializes `App(path:)` (which parses the binary
-synchronously on the background thread), then dispatches the result to the main
-queue to add it to `allApps`. Included audio plugin roots are scanned as raw
+`AppScanner` (a `Sendable` value-type snapshot of the settings, in
+`MainWindowController.swift`) runs in a detached task and streams `App` values
+to the main actor through an `AsyncStream`; cancelling the scan task stops it.
+It uses `FileManager.enumerator` to walk directories. For each `.app` path
+found during normal app scans, it initializes `App(path:)` (which parses the
+binary synchronously inside the detached task), and the main actor adds the
+result to `allApps`. Included audio plugin roots are scanned as raw
 file trees instead: every non-directory file is passed to `App(binaryPath:)`,
 and parseable Mach-O binaries are added as application-style rows.
 
@@ -137,7 +139,7 @@ Key skip conditions already in place:
 - Non-`.app` paths are skipped
 - If `recurseIntoApps` is false, `enumerator.skipDescendents()` is called after
   finding a `.app`
-- `com.apple.*` bundles are optionally excluded at the main-queue insertion
+- `com.apple.*` bundles are optionally excluded at the main-actor insertion
   point
 - Paths matching excluded Special Folders cause `enumerator.skipDescendents()`
 - Legacy paths in `folderBlacklist` are still honored as excluded folders
@@ -313,9 +315,7 @@ opens the repo URL via `NSWorkspace.shared.open(_:)`.
 ## CI / Release
 
 - **CI** (`.github/workflows/ci.yaml`): Builds Debug + Release on every push/PR
-  to `main` (rework tracked in HANDOFF H-7). Uses
-  `OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion"` to
-  suppress warnings from the `GitHubUpdates` submodule's xcconfig.
+  to `main` (rework tracked in HANDOFF H-7).
 - **Release** (`.github/workflows/release.yaml`): Triggered by pushing a
   `v*.*.*` tag. Builds Release, zips `Silicon.app` with `ditto`, and publishes
   a GitHub Release with the archive. Release notes are written manually with
@@ -334,7 +334,7 @@ gh release create v1.x.y --title "Silicon v1.x.y" --notes "..."
 ## Things to Avoid
 
 - Do not mutate `NSArrayController` content from a background thread.
-- Do not add filtering logic inside `findApps()` — keep it in
+- Do not add filtering logic inside `AppScanner` — keep it in
   `updateArchFilter()` via predicates.
 - Do not use `NSWorkspace` APIs on a background thread; they are main-thread
   only.

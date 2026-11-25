@@ -25,16 +25,21 @@
 
 import Foundation
 
-public final class HomebrewService
+/// Downloads, caches, and queries Homebrew cask and formula metadata.
+///
+/// `@unchecked Sendable`: the three lookup tables are only read or written
+/// while holding `lock`; every other stored property is an immutable `let`.
+public final class HomebrewService: @unchecked Sendable
 {
     public static let shared = HomebrewService()
 
-    public struct Entry
+    public struct Entry: Sendable
     {
         public let token:   String
         public let version: String
     }
 
+    private let lock = NSLock()
     private var casksByBundleID: [ String: Entry ] = [:]
     private var casksByAppName:  [ String: Entry ] = [:]
     private var formulaByName:   [ String: Entry ] = [:]
@@ -53,76 +58,40 @@ public final class HomebrewService
         self.cacheDir = home.appendingPathComponent( ".Silicon/homebrew_cache" )
     }
 
-    /// Load from cache if fresh; otherwise fetch from the network. Calls back on the main queue.
-    public func load( completion: @escaping ( Error? ) -> Void )
+    /// Load from cache if fresh; otherwise fetch from the network.
+    ///
+    /// - Throws: A file system or network error. Both feeds are fetched in
+    ///   parallel and the first failure is rethrown.
+    public func load() async throws
     {
-        DispatchQueue.global( qos: .userInitiated ).async
-        {
-            do
-            {
-                try FileManager.default.createDirectory( at: self.cacheDir, withIntermediateDirectories: true )
-            }
-            catch
-            {
-                DispatchQueue.main.async { completion( error ) }
-                return
-            }
+        try FileManager.default.createDirectory( at: self.cacheDir, withIntermediateDirectories: true )
 
-            let group = DispatchGroup()
-            var caskData:    Data?
-            var formulaData: Data?
-            var fetchError:  Error?
+        async let caskData    = self.fetchOrLoad( remote: HomebrewService.caskFeedURL,    cache: self.caskCacheURL )
+        async let formulaData = self.fetchOrLoad( remote: HomebrewService.formulaFeedURL, cache: self.formulaCacheURL )
 
-            group.enter()
-            self.fetchOrLoad( remote: HomebrewService.caskFeedURL, cache: self.caskCacheURL )
-            {
-                result in
-                switch result
-                {
-                    case .success( let data ): caskData   = data
-                    case .failure( let err ):  fetchError = err
-                }
-                group.leave()
-            }
+        let casks    = try await caskData
+        let formulae = try await formulaData
 
-            group.enter()
-            self.fetchOrLoad( remote: HomebrewService.formulaFeedURL, cache: self.formulaCacheURL )
-            {
-                result in
-                switch result
-                {
-                    case .success( let data ): formulaData = data
-                    case .failure( let err ):  fetchError  = err
-                }
-                group.leave()
-            }
-
-            group.wait()
-
-            if let error = fetchError
-            {
-                DispatchQueue.main.async { completion( error ) }
-                return
-            }
-
-            if let data = caskData    { self.parseCasks(    data: data ) }
-            if let data = formulaData { self.parseFormulae( data: data ) }
-
-            DispatchQueue.main.async { completion( nil ) }
-        }
+        self.parseCasks( data: casks )
+        self.parseFormulae( data: formulae )
     }
 
-    /// Delete cached files and re-fetch. Calls back on the main queue.
-    public func forceRefresh( completion: @escaping ( Error? ) -> Void )
+    /// Delete cached files and re-fetch.
+    ///
+    /// - Throws: Any error that `load()` throws.
+    public func forceRefresh() async throws
     {
         try? FileManager.default.removeItem( at: self.caskCacheURL )
         try? FileManager.default.removeItem( at: self.formulaCacheURL )
-        self.load( completion: completion )
+        try await self.load()
     }
 
     /// Look up by bundle ID first (accurate), then by app display name (fuzzy fallback).
     public func lookup( bundleID: String?, appName: String ) -> Entry?
     {
+        self.lock.lock()
+        defer { self.lock.unlock() }
+
         if let bid = bundleID,
            let entry = self.casksByBundleID[ bid.lowercased() ] { return entry }
 
@@ -142,29 +111,23 @@ public final class HomebrewService
         return Date().timeIntervalSince( modified ) < HomebrewService.maxCacheAge
     }
 
-    private func fetchOrLoad( remote: URL, cache: URL, completion: @escaping ( Result< Data, Error > ) -> Void )
+    private func fetchOrLoad( remote: URL, cache: URL ) async throws -> Data
     {
         if self.isFresh( cache ), let cached = try? Data( contentsOf: cache )
         {
-            completion( .success( cached ) )
-            return
+            return cached
         }
 
-        URLSession.shared.dataTask( with: remote )
+        let ( data, response ) = try await URLSession.shared.data( from: remote )
+
+        guard ( response as? HTTPURLResponse )?.statusCode == 200 else
         {
-            data, _, error in
-
-            if let error = error { completion( .failure( error ) ); return }
-            guard let data = data else
-            {
-                completion( .failure( URLError( .badServerResponse ) ) )
-                return
-            }
-
-            try? data.write( to: cache )
-            completion( .success( data ) )
+            throw URLError( .badServerResponse )
         }
-        .resume()
+
+        try? data.write( to: cache )
+
+        return data
     }
 
     private func parseCasks( data: Data )
@@ -246,6 +209,9 @@ public final class HomebrewService
             }
         }
 
+        self.lock.lock()
+        defer { self.lock.unlock() }
+
         self.casksByBundleID = byBundleID
         self.casksByAppName  = byAppName
     }
@@ -266,6 +232,9 @@ public final class HomebrewService
 
             byName[ name.lowercased() ] = Entry( token: name, version: stable )
         }
+
+        self.lock.lock()
+        defer { self.lock.unlock() }
 
         self.formulaByName = byName
     }

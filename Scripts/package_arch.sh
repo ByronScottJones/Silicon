@@ -16,7 +16,6 @@ Options:
   --derived-data PATH        DerivedData path (default: build/DerivedData-ARCH)
   --dist-dir PATH            Output directory (default: build/dist)
   --signing MODE             unsigned, adhoc, or automatic (default: unsigned)
-  --other-cflags FLAGS       Extra C flags passed to xcodebuild
   --deployment-target VALUE  Override MACOSX_DEPLOYMENT_TARGET
   --help                     Show this help
 USAGE
@@ -30,7 +29,6 @@ SCHEME="Silicon"
 DERIVED_DATA=""
 DIST_DIR="build/dist"
 SIGNING="unsigned"
-OTHER_CFLAGS="-Wno-implicit-int-float-conversion -Wno-conversion -Wno-deprecated-declarations"
 DEPLOYMENT_TARGET=""
 
 while [ "$#" -gt 0 ]; do
@@ -65,10 +63,6 @@ while [ "$#" -gt 0 ]; do
             ;;
         --signing)
             SIGNING="${2:?missing --signing value}"
-            shift 2
-            ;;
-        --other-cflags)
-            OTHER_CFLAGS="${2:?missing --other-cflags value}"
             shift 2
             ;;
         --deployment-target)
@@ -112,7 +106,7 @@ case "$SIGNING" in
         ;;
 esac
 
-if [ ! -d "Submodules/GitHubUpdates/GitHubUpdates.xcodeproj" ] || [ ! -f "Submodules/xcconfig/Release.xcconfig" ]; then
+if [ ! -f "Submodules/xcconfig/Release.xcconfig" ]; then
     echo "Required submodules are missing. Run: make submodules" >&2
     exit 1
 fi
@@ -130,7 +124,6 @@ xcodebuild \
     -derivedDataPath "$DERIVED_DATA" \
     ARCHS="$ARCH" \
     ONLY_ACTIVE_ARCH=NO \
-    OTHER_CFLAGS="$OTHER_CFLAGS" \
     "${DEPLOYMENT_SETTING[@]}" \
     "${SIGNING_SETTINGS[@]}" \
     build

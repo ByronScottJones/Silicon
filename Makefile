@@ -4,11 +4,10 @@ CONFIGURATION ?= Release
 DERIVED_DATA ?= build/DerivedData
 DIST_DIR ?= build/dist
 PACKAGE_SCRIPT ?= Scripts/package_arch.sh
-OTHER_CFLAGS ?= -Wno-implicit-int-float-conversion -Wno-conversion -Wno-deprecated-declarations
-ARM64_DEPLOYMENT_TARGET ?= 11.0
+ARM64_DEPLOYMENT_TARGET ?= 14.0
 
 XCODEBUILD ?= xcodebuild
-XCODE_COMMON = -project "$(PROJECT)" -scheme "$(SCHEME)" -configuration "$(CONFIGURATION)" OTHER_CFLAGS="$(OTHER_CFLAGS)"
+XCODE_COMMON = -project "$(PROJECT)" -scheme "$(SCHEME)" -configuration "$(CONFIGURATION)"
 
 # Local packaging defaults to unsigned apps so it works without a developer
 # certificate. For signed builds, pass SIGNING=automatic or SIGNING=adhoc.
@@ -58,10 +57,10 @@ build-arm:
 	$(XCODEBUILD) $(XCODE_COMMON) -derivedDataPath "$(DERIVED_DATA)-arm64" $(SIGNING_SETTINGS) ARCHS=arm64 ONLY_ACTIVE_ARCH=NO MACOSX_DEPLOYMENT_TARGET="$(ARM64_DEPLOYMENT_TARGET)" build
 
 app-arm:
-	"$(PACKAGE_SCRIPT)" --arch arm64 --app-only --configuration "$(CONFIGURATION)" --project "$(PROJECT)" --scheme "$(SCHEME)" --derived-data "$(DERIVED_DATA)-arm64" --dist-dir "$(DIST_DIR)" --signing "$(SIGNING)" --other-cflags "$(OTHER_CFLAGS)" --deployment-target "$(ARM64_DEPLOYMENT_TARGET)"
+	"$(PACKAGE_SCRIPT)" --arch arm64 --app-only --configuration "$(CONFIGURATION)" --project "$(PROJECT)" --scheme "$(SCHEME)" --derived-data "$(DERIVED_DATA)-arm64" --dist-dir "$(DIST_DIR)" --signing "$(SIGNING)" --deployment-target "$(ARM64_DEPLOYMENT_TARGET)"
 
 dmg-arm:
-	"$(PACKAGE_SCRIPT)" --arch arm64 --configuration "$(CONFIGURATION)" --project "$(PROJECT)" --scheme "$(SCHEME)" --derived-data "$(DERIVED_DATA)-arm64" --dist-dir "$(DIST_DIR)" --signing "$(SIGNING)" --other-cflags "$(OTHER_CFLAGS)" --deployment-target "$(ARM64_DEPLOYMENT_TARGET)"
+	"$(PACKAGE_SCRIPT)" --arch arm64 --configuration "$(CONFIGURATION)" --project "$(PROJECT)" --scheme "$(SCHEME)" --derived-data "$(DERIVED_DATA)-arm64" --dist-dir "$(DIST_DIR)" --signing "$(SIGNING)" --deployment-target "$(ARM64_DEPLOYMENT_TARGET)"
 
 dist: dmg-arm
 

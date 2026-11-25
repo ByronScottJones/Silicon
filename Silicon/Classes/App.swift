@@ -25,7 +25,10 @@
 
 import Cocoa
 
-@objc public class App: NSObject
+/// `@unchecked Sendable`: an `App` is built on a background task, handed once
+/// to the main actor, and never touched by the background task again. After that
+/// only the main actor mutates `brewToken` and `brewVersion`.
+@objc public class App: NSObject, @unchecked Sendable
 {
     @objc public private( set ) var name:                String
     @objc public private( set ) var path:                String

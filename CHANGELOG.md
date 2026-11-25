@@ -8,6 +8,33 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### chore/modernize-toolchain: macOS 14 target, Swift 6, structured concurrency
+
+- Branch: `chore/modernize-toolchain`, base `docs/project-standards`
+- Worked on by: Byron Scott Jones (owner); Claude Sonnet 5.5 (Claude Code, author)
+- What it did:
+  - Raised `MACOSX_DEPLOYMENT_TARGET` from 11.0 to 14.0 and set Swift 6 language
+    mode at project level.
+  - Replaced the GCD scan and its `loading` and `stop` polling with a cancellable
+    `Task` and an `AsyncStream` fed by a `Sendable` `AppScanner`.
+  - Rewrote `HomebrewService` with `async`/`await`, lock-protected tables, and an
+    HTTP status check (a non-200 response is now an error).
+  - Replaced deprecated `allowedFileTypes` with `allowedContentTypes`.
+  - Removed the obsolete `OTHER_CFLAGS` warning workaround from the Makefile and
+    packaging script; marked `ApplicationDelegate` `@MainActor`.
+- Spec and docs: REQ-SCAN-1, REQ-UI-4, REQ-QA-1; sections 5.1, 6, 8, 9; AGENTS,
+  BUILDING, README.
+- Verification: Debug and Release `xcodebuild` succeed with no first-party
+  warnings; Release executable is `arm64` and `LSMinimumSystemVersion` is 14.0.
+  Not exercised: a manual scan, export, cancel, and Homebrew refresh in the
+  running app; there are no automated tests yet (HANDOFF H-5).
+- Notes: the Release run script phase rewrites `Silicon/Info.plist` during a
+  build; the change was reverted by hand. `.gitmodules` could not be edited from
+  the agent sandbox (H-8). An earlier draft of this work's plan wrongly said the
+  code used `print`; it contains none.
+
+---
+
 ### docs/project-standards: adopt the project documentation standard
 
 - Branch: `docs/project-standards`, base `feat/arm64-only-and-copyright`

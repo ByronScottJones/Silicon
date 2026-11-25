@@ -445,10 +445,12 @@ public class PreferencesWindowController: NSWindowController, NSTableViewDataSou
         self.refreshButton.isEnabled = false
         self.refreshButton.title     = "Refreshing..."
 
-        HomebrewService.shared.forceRefresh
-        { [ weak self ] _ in
-            self?.refreshButton.isEnabled = true
-            self?.refreshButton.title     = "Refresh Homebrew Cache"
+        Task
+        {
+            try? await HomebrewService.shared.forceRefresh()
+
+            self.refreshButton.isEnabled = true
+            self.refreshButton.title     = "Refresh Homebrew Cache"
 
             if let mwc = ( NSApp.delegate as? ApplicationDelegate )?.mainWindowController,
                mwc.checkHomebrew
