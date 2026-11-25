@@ -1,8 +1,8 @@
 /*******************************************************************************
  * The MIT License (MIT)
  * 
- * Copyright (c) 2020 DigiDNA - www.imazing.com
- * Enhancements Copyright @ 2026 - Byron Scott Jones
+ * Copyright © 2020 DigiDNA - www.imazing.com
+ * Enhancements Copyright © 2026 - Byron Scott Jones
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
