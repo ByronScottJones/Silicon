@@ -1,11 +1,18 @@
 name: Release
 
-# Pushing a version tag is itself a deliberate manual action, so this workflow
-# runs on tags without the AUTO_CI gate used by ci.yaml.
+# Runs when a version tag is pushed (itself a deliberate manual action, so no
+# AUTO_CI gate) or when started by hand from the Actions tab with the name of an
+# existing tag.
 on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build and release (for example v1.2.0)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,11 +24,21 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
     steps:
+      - name: Validate tag name
+        run: |
+          if ! [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag must look like v1.2.3, got: $RELEASE_TAG" >&2
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
           submodules: recursive
           fetch-depth: 1
 
@@ -48,14 +65,15 @@ jobs:
       - name: Package app
         run: |
           APP_PATH="build/DerivedData/Build/Products/Release/Silicon.app"
-          ZIP_NAME="Silicon-${GITHUB_REF_NAME}-arm64.zip"
+          ZIP_NAME="Silicon-${RELEASE_TAG}-arm64.zip"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_NAME"
           echo "ZIP_NAME=$ZIP_NAME" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
-          name: Silicon ${{ github.ref_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: Silicon ${{ env.RELEASE_TAG }}
           draft: false
           prerelease: false
           generate_release_notes: true

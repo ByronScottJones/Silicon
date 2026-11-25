@@ -318,7 +318,8 @@ opens the repo URL via `NSWorkspace.shared.open(_:)`.
   repository variable `AUTO_CI` is `true`. Builds Debug and Release, checks that
   the executable is arm64 only, and runs the tests.
 - **Release** (`.github/workflows/release.yaml`): triggered by pushing a
-  `v*.*.*` tag. Builds Release, checks arm64, zips `Silicon.app` with `ditto`,
+  `v*.*.*` tag, or manually from the Actions tab with the `tag` input set to an
+  existing tag. Builds Release, checks arm64, zips `Silicon.app` with `ditto`,
   and publishes a GitHub Release with the archive.
 - Actions are pinned to commit SHAs; keep them pinned (Dependabot updates them).
 

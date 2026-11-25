@@ -19,7 +19,9 @@ commit ids) are deliberately not recorded here; read them from git. See
     `lipo` arm64 assertion, and a test step.
   - Pinned `actions/checkout` (v7.0.1) and `softprops/action-gh-release` (v3.0.4)
     to commit SHAs, resolved from the GitHub API on 2026-11-25.
-  - Release workflow asserts arm64 and names the archive `-arm64.zip`.
+  - Release workflow asserts arm64, names the archive `-arm64.zip`, and can also
+    be started manually with a `tag` input naming an existing `vX.Y.Z` tag
+    (validated, then checked out).
   - Added Dependabot for GitHub Actions.
 - Spec and docs: section 10, AGENTS CI section.
 - Verification: workflow YAML parses; the SHAs were read from GitHub. The
