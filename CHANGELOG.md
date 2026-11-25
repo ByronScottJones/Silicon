@@ -8,6 +8,26 @@ commit ids) are deliberately not recorded here; read them from git. See
 
 ---
 
+### chore/format-and-logging: os.Logger for Homebrew and formatter decision
+
+- Branch: `chore/format-and-logging`, base `ci/rework-workflows`
+- Worked on by: Byron Scott Jones (owner); Claude Sonnet 5.5 (Claude Code, author)
+- What it did:
+  - `HomebrewService` logs load failures, non-200 responses, and unparseable JSON
+    through `os.Logger`.
+  - Recorded decision D-4: formatter work deferred; the existing code style is
+    kept and `swift-format` is not enforced.
+  - Logged low-priority future work in HANDOFF (H-10 to H-14): `diskutil` DMG
+    packaging, About copyright lines, footer counter width, startup screen
+    redesign, and a separate audio plugin section.
+- Spec and docs: section 8, decision D-4, HANDOFF section 5.
+- Verification: 25 tests pass. The log calls themselves were not exercised.
+- Notes: `swift format lint` with default rules reported 3,923 findings on
+  `Silicon/Classes`, measured 2026-11-25; no `.swift-version` was added because
+  CI selects the toolchain through the installed Xcode.
+
+---
+
 ### ci/rework-workflows: single gated CI workflow with pinned actions
 
 - Branch: `ci/rework-workflows`, base `test/unit-tests`

@@ -17,7 +17,7 @@ and the specification is [ENGINEERING.md](ENGINEERING.md).
 
 ## 2. Resume here
 
-Start with H-6 (formatter and linter):
+Start with H-8, then H-9:
 
 ```bash
 make submodules
@@ -32,13 +32,20 @@ None.
 
 | ID | Item | Reason | Acceptance | Owner | Blocked by |
 | --- | --- | --- | --- | --- | --- |
-| H-4 | Add `os.Logger` output for scan and Homebrew failures | `swift.md` standard; failures are silent today | Section 8 updated | Byron Scott Jones | none |
-| H-6 | Add formatter and linter configuration and `.swift-version`, then run `swift format lint --strict` in CI | `swift.md` standard | `swift format lint --strict` passes in CI | Byron Scott Jones | none |
 | H-8 | Remove the duplicate `xcconfig` entry (path `xcconfig`) in `.gitmodules`; the agent sandbox cannot write that file | Duplicate submodule entry | `git submodule status` clean | Byron Scott Jones | none |
 | H-9 | Bring `README.md`, `BUILDING.md`, `SECURITY.md`, `AI_NOTICE.md`, and `CODE_OF_CONDUCT.md` to the Markdown lint rules and drop them from the ignore list in `.markdownlint-cli2.jsonc` | Inherited style does not pass | Lint passes with no ignores for these files | Byron Scott Jones | none |
+| H-10 | Low priority. Replace `hdiutil create` in `Scripts/package_arch.sh` with `diskutil image create from` | `hdiutil create` is deprecated and prints a warning; a future macOS may remove it | DMG builds without the warning, keeps the UDZO format, volume name and Applications link, and mounts correctly | Byron Scott Jones | none |
+| H-11 | Low priority. Split the About dialog copyright onto three lines, keeping the existing text: `Copyright © 2020 DigiDNA.`, `Enhancements Copyright © 2026 - Byron Scott Jones.`, `All rights reserved.` | The single-line notice in `NSHumanReadableCopyright` is hard to read | About window shows exactly those three lines with the current wording; `LICENSE` and source headers are unchanged; the label is tall enough that no line is clipped | Byron Scott Jones | none |
+| H-12 | Low priority. Give the appCount in the main window footer a fixed minimum width of at least 4 digits | The footer shifts and flickers as the counter's width changes during a scan | Rest of the footer does not move while the count goes from 0 to 10,000; checked during a real scan | Byron Scott Jones | none |
+| H-13 | Low priority. Redesign the initial startup (drop) screen in `DropView` and `MainWindowController.xib` | The current screen is not elegant and looks dated | Modern layout agreed with the owner; drag and drop and the Scan button still work | Byron Scott Jones | none |
+| H-14 | Low priority. Show audio plugins as a separate section of the results list | Plugin binaries are mixed in with applications | Plugins are grouped together and visibly separate; filters, sorting and export still work, and ENGINEERING.md sections 4 and 5 describe the grouping | Byron Scott Jones | none |
 
 ## 5. Decisions needed
 
+- Format the code base with `swift-format`? Deferred (decision D-4): the owner
+  is investigating whether an automated tool can bring the code into
+  compliance. Options: keep the upstream style, or reformat everything once and
+  enforce `swift format lint --strict` in CI.
 - Which Git identity is the maintainer's? History shows both `Byron Scott Jones`
   and `ByronJones-Elsevier`. Recommendation: record the second as an alias of the
   first only after the owner confirms it.

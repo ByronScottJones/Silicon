@@ -345,8 +345,11 @@ MUST resolve the delegate lazily at action time.
   `nil`.
 - Homebrew fetch failures are returned to the caller as an `Error` through the
   completion handler; they do not stop or fail a scan.
-- The app has no exit-code contract. It emits no diagnostics today; adding
-  `os.Logger` output is tracked in HANDOFF as H-4.
+- The app has no exit-code contract. `HomebrewService` logs failures with
+  `os.Logger` (subsystem is the bundle identifier, category `homebrew`): failed
+  loads, non-200 responses, and unparseable JSON. Error text is marked public;
+  no user data or paths are logged. Scanning logs nothing because skipped files
+  are the normal case.
 
 ## 9. Technology and dependencies
 
@@ -432,3 +435,21 @@ Results of running this plan are recorded in [CHANGELOG.md](CHANGELOG.md).
 - Choice: keep AppKit with XIBs rather than rewrite in SwiftUI.
 - Consequences: concurrency and testing changes must preserve the KVC rules in
   section 6.
+
+### D-4: Swift formatting deferred (deferred)
+
+- Context: `swift.md` names `swift-format` as the default, but the code base
+  uses the upstream author's style (opening brace on its own line, spaces inside
+  parentheses, aligned assignments). `swift format lint` with default rules
+  reports 3,923 findings on `Silicon/Classes`, and its options cannot express
+  that brace style.
+- Choice: defer formatter work. For now keep the existing style and do not
+  enforce a formatter; new code matches the surrounding code. The owner is
+  investigating whether an automated tool can bring the code into compliance.
+  The project's own convention outranks the default, as `coding.md` allows.
+- Rationale: reformatting every file would bury the real history of the fork in
+  one change and make upstream merges harder.
+- Rejected: adopting `swift-format` defaults and reformatting; a custom
+  `.swift-format` that disables most rules (it would enforce almost nothing).
+- Consequences: style is a review concern until the owner decides (HANDOFF
+  section 5).
