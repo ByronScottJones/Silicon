@@ -458,6 +458,7 @@ DQ
                                     <constraint firstAttribute="bottom" secondItem="2P9-ac-fjj" secondAttribute="bottom" constant="8" id="4ic-jW-dPG"/>
                                     <constraint firstItem="gOG-g2-H7Y" firstAttribute="top" secondItem="1Uf-5D-8gz" secondAttribute="top" constant="25" id="8ML-05-06n"/>
                                     <constraint firstItem="Og5-pw-YO3" firstAttribute="centerY" secondItem="hdw-9V-Hlw" secondAttribute="centerY" id="CYL-H4-hw6"/>
+                                    <constraint firstItem="Og5-pw-YO3" firstAttribute="width" relation="greaterThanOrEqual" constant="48" id="cnt-wd-Min"/>
                                     <constraint firstItem="y1x-cB-ONP" firstAttribute="leading" secondItem="1Uf-5D-8gz" secondAttribute="leading" id="Hio-eQ-X8Q"/>
                                     <constraint firstItem="PDk-2u-0qa" firstAttribute="centerY" secondItem="lhn-dQ-baP" secondAttribute="centerY" id="IfQ-lS-tWY"/>
                                     <constraint firstItem="EXT-aP-E37" firstAttribute="centerY" secondItem="Og5-pw-YO3" secondAttribute="centerY" id="Nl6-AL-6Za"/>
